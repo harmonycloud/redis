@@ -1,0 +1,63 @@
+---
+# Source: redis/templates/test/redis-test.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: reidsxxxxx-redis-charts-tests-redis
+---
+# Source: redis/templates/test/redis-test.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: nsxxxxxx-reidsxxxxx-redis-charts-tests-redis
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - pods
+      - redisclusters
+    verbs:
+      - get
+      - list
+      - delete
+---
+# Source: redis/templates/test/redis-test.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: nsxxxxxx-reidsxxxxx-redis-charts-tests-redis
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: nsxxxxxx-reidsxxxxx-redis-charts-tests-redis
+subjects:
+  - kind: ServiceAccount
+    name: reidsxxxxx-redis-charts-tests-redis
+    namespace: nsxxxxxx
+---
+# Source: redis/templates/test/redis-test.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: reidsxxxxx-redis-test
+  annotations:
+    "helm.sh/hook": test-success
+  labels:
+    helm-test: redis
+spec:
+  containers:
+    - image: harbor.middleware.com/middleware/operator-test-framework:v0.3
+      name: reidsxxxxx-redis-test
+      # args: ["-p","name=reidsxxxxx-redis","-v","2"]
+      args: ["-p","name=reidsxxxxx-redis"]
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - name: config-volume
+          mountPath: /conf
+  volumes:
+    - name: config-volume
+      configMap:
+        name: reidsxxxxx-redis-test-config
+  serviceAccount: reidsxxxxx-redis-charts-tests-redis
+  serviceAccountName: reidsxxxxx-redis-charts-tests-redis
+  restartPolicy: Never

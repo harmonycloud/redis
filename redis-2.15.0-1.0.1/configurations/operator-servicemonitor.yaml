@@ -1,0 +1,20 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareConfiguration
+metadata:
+  name: redis-operator-servicemonitor
+spec:
+  template: |
+    apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      labels:  {{range  $key, $value := .Globe.Labels}}  
+        {{ $key }}: {{ $value }} {{- end}}
+      name: {{ .Globe.Name }}
+    spec:
+      endpoints:
+        - interval: 30s
+          port: redis-operator
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: redis-operator
+          app.kubernetes.io/instance: {{ .Globe.Name }}

@@ -1,0 +1,167 @@
+{{- if  .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "redis.fullname" . }}
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    {{- if .Values.predixy.enableProxy }}
+    - name: redis-proxy
+      rules:
+      - alert: MismatchedRequestResponseRate
+        expr: abs(rate(predixy_cluster_total_requests{cluster='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"}[5m]) - rate(predixy_cluster_total_respones{cluster='{{ include "redis.fullname" . }}'}[5m])) > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          message: "Mismatched request/response rate detected on redis proxy. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }})"
+          metric: predixy_cluster_total_requests
+          product: harmonycloud
+          service: metrics
+    {{- end }}
+    - name: redis-exporter
+      rules:
+      - alert: ReidsExporterDown
+        annotations:
+          message: "Redis Exporter is down. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
+          metric: up
+          product: harmonycloud
+          service: metrics
+        expr: up{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"} == 0
+        for: 5m
+        labels:
+          severity: warning
+    - name: redis-rules
+      rules:
+        - alert: RedisFailOver
+          expr: rate(slave_failover_total{name="{{ include "redis.fullname" . }}",target_namespace={{ .Release.Namespace | quote }}}[3m]) > 0
+          for: 30s
+          labels:
+            severity: warning
+          annotations:
+            product: harmonycloud
+            service: metrics
+            message: "Redis instance failover. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }})"
+        # 节点不健康
+        - alert: RedisUnhealthy
+          expr: redis_up{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"} < 1 or kube_pod_container_status_running{container="redis-cluster", pod=~'{{ include "redis.fullname" . }}-[0-9]|{{ include "redis.fullname" . }}-shard-[0-9]-[0-9]'} == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            product: harmonycloud
+            service: metrics
+            message: "Redis instance is unhealthy. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }})"
+        # 连接客户端过多
+        - alert: RedisLargConnect
+          expr: redis_connected_clients{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"} * 100/redis_config_maxclients{service='{{ include "redis.fullname" . }}', namespace="{{ .Release.Namespace }}"} > 80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            product: harmonycloud
+            service: metrics
+            message: 'Redis client connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis_config_maxclients configuration. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }})'
+        # 连接阻塞过多
+        - alert: RedisLargeBlockConnect
+          expr: redis_blocked_clients{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"} * 100/redis_connected_clients{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"} > 20
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            product: harmonycloud
+            service: metrics
+            message: 'Redis block connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis client connections.. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }})'
+        # 连接拒绝
+#        - alert: RedisRejectedConnections
+#          expr: increase(redis_rejected_connections_total{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"}[1m]) > 0
+#          for: 5m
+#          labels:
+#            severity: warning
+#          annotations:
+#            message: "Redis instance has some rejected connections, current_value={{ `{{ $value }}` }}. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }})"
+
+        # 副本数量不正确
+        - alert: RedisReplicationBroken
+          expr: delta(redis_connected_slaves{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"}[3m]) < 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            message: "Redis instance lost a slave. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
+        # 备份失败
+#        - alert: RedisMissingBackup
+#          expr: time() - redis_rdb_last_save_timestamp_seconds{service='{{ include "redis.fullname" . }}'} > 60 * 60 * 24
+#          for: 0m
+#          labels:
+#            severity: critical
+#          annotations:
+#            summary: Redis missing backup (instance {{`{{ $labels.instance }}`}})
+#            description: Redis has not been backuped for 24 hours\n  VALUE = {{`{{ $value }}`}}\n  LABELS {{`{ { $labels } }`}}
+        # 内存过高
+        - alert: RedisOutOfConfiguredMaxmemory
+          expr:  (redis_memory_used_bytes{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"} * 100 / redis_memory_max_bytes{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"}) > 90 and redis_memory_max_bytes{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"}!=0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            message: 'Redis is running out of configured maxmemory (> current_value={{ `{{ printf "%.0f" $value }}` }}%). (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+        - alert: RedisVolumeUsage70
+          expr:  (100 * kube_persistentvolumeclaim_info{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~"redis-data-{{ include "redis.fullname" . }}.*"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > 70
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            product: harmonycloud
+            message: 'The disk usage of Redis has exceeded 70%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+        - alert: RedisVolumeUsage85
+          expr:  (100 * kube_persistentvolumeclaim_info{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~"redis-data-{{ include "redis.fullname" . }}.*"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > 85
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            product: harmonycloud
+            message: 'The disk usage of Redis has exceeded 85%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+        - alert: RedsMemoryUsageHigh
+          annotations:
+            message: 'The memory usage of Redis has exceeded 90%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+          expr: 100 * sum(container_memory_working_set_bytes{namespace='{{ .Release.Namespace }}',pod=~'{{ include "redis.fullname" . }}-[0-9]|{{ include "redis.fullname" . }}-shard-[0-9]-[0-9]',endpoint!="",container!=""}) by (pod) / sum(kube_pod_container_resource_requests{namespace='{{ .Release.Namespace }}',pod=~'{{ include "redis.fullname" . }}-[0-9]|{{ include "redis.fullname" . }}-shard-[0-9]-[0-9]',resource="memory"}) by (pod) > 90
+          for: 5m
+          labels:
+            severity: warning
+        - alert: RedisCpuUsageHigh
+          annotations:
+            message: 'The cpu usage of Redis has exceeded 90%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+          expr: 100 * sum(rate (container_cpu_usage_seconds_total{namespace='{{ .Release.Namespace }}',pod=~'{{ include "redis.fullname" . }}-[0-9]|{{ include "redis.fullname" . }}-shard-[0-9]-[0-9]',endpoint!="",container!=""}[5m]) ) by (pod) / sum(kube_pod_container_resource_requests{namespace='{{ .Release.Namespace }}',pod=~'{{ include "redis.fullname" . }}-[0-9]|{{ include "redis.fullname" . }}-shard-[0-9]-[0-9]',resource="cpu"}) by (pod)  > 90
+          for: 5m
+          labels:
+            severity: warning
+
+    {{- if eq .Values.type "sentinel" }}
+    - name: redis-sentinel
+      rules:
+        # 哨兵监控的master不正常
+        - alert: RedisSentinelWatchNodeUnhealthy
+          expr: redis_sentinel_master_status{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            product: harmonycloud
+            service: metrics
+            message: "Redis master node monitored by the sentinel is unhealthy. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }})"
+        # 哨兵数量不对
+        - alert: RedisSentries_num
+          expr: redis_sentinel_master_sentinels{service='{{ include "redis.fullname" . }}',namespace="{{ .Release.Namespace }}"}%2 == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            product: harmonycloud
+            service: metrics
+            message: "Redis sentinel num is not right,  current_value={{ `{{ $value }}` }}. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }})"
+    {{- end }}
+{{- end }}

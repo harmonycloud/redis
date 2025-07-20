@@ -1,0 +1,43 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareActionBaseline
+metadata:
+  name: pre-redis-hostnetwork
+spec:
+  baselineType: "PreAction"
+  actionType: "hostnetwork"
+  necessary:
+    hostNetwork: "bool"
+  steps:
+    - name: hostnetwork
+      type: "KubectlEdit" # KubectlGet、KubectlEdit、KubectlExec、Exec、HTTP
+      cue: |
+        output: {
+          spec: parameters.spec
+        }
+        parameters: {
+          spec: {
+            parameters: {
+              pod: [
+                {
+                  hostNetwork: {{ .Necessary.hostNetwork }}
+                },
+              ]
+            }
+            {{ if eq .Necessary.hostNetwork true }}
+            preActions: [
+              {
+                name: "pre-redis-affinity"
+                parameters: {
+                  podAntiAffinity: "hard"
+                }
+              },
+            ]
+            {{- end }}
+          }
+          resource: {
+            apiversion: "middleware.cn/v1"
+            kind: "Middleware"
+            name: "{{ .Globe.Name }}"
+            namespace: "{{ .Globe.Namespace }}"
+          }
+        }

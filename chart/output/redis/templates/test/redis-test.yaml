@@ -1,0 +1,63 @@
+---
+# Source: redis/templates/test/redis-test.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: redis-charts-tests-redis
+---
+# Source: redis/templates/test/redis-test.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: default-redis-charts-tests-redis
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - pods
+      - redisclusters
+    verbs:
+      - get
+      - list
+      - delete
+---
+# Source: redis/templates/test/redis-test.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default-redis-charts-tests-redis
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: default-redis-charts-tests-redis
+subjects:
+  - kind: ServiceAccount
+    name: redis-charts-tests-redis
+    namespace: default
+---
+# Source: redis/templates/test/redis-test.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis-test
+  annotations:
+    "helm.sh/hook": test-success
+  labels:
+    helm-test: redis
+spec:
+  containers:
+    - image: harbor.middleware.com/middleware/operator-test-framework:v0.3
+      name: redis-test
+      # args: ["-p","name=redis","-v","2"]
+      args: ["-p","name=redis"]
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - name: config-volume
+          mountPath: /conf
+  volumes:
+    - name: config-volume
+      configMap:
+        name: redis-test-config
+  serviceAccount: redis-charts-tests-redis
+  serviceAccountName: redis-charts-tests-redis
+  restartPolicy: Never

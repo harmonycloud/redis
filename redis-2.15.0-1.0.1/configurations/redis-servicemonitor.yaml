@@ -1,0 +1,26 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareConfiguration
+metadata:
+  name: redis-servicemonitor
+spec:
+  template: |
+    apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      generation: 1
+      labels:
+        app: {{ .Globe.Name }}
+      name: {{ .Globe.Name }}
+    spec:
+      endpoints:
+        - interval: 30s
+          port: redis-exporter
+          relabelings:
+          - replacement: redis
+            targetLabel: middleware
+          - sourceLabels: [service]
+            replacement: {{ .Globe.Name }}
+            targetLabel: service
+      selector:
+        matchLabels:
+          app: {{ .Globe.Name }}

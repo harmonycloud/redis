@@ -1,0 +1,101 @@
+target: proxy
+parameters:
+  - master-read-priority:
+    - name: default
+      value: '40'
+    - name: isReboot
+      value: y
+    - name: range
+      value: [0-100]
+    - name: describe
+      value: "Read-write separation function, the priority of executing read requests from the Redis master node. If set to 0, reading from the Redis master is prohibited. If not specified, the default value is 40."
+  - static-slave-read-priority:
+    - name: default
+      value: '50'
+    - name: isReboot
+      value: y
+    - name: range
+      value: [0-100]
+    - name: describe
+      value: "Read-write separation function, the priority of executing read requests from the static Redis slave nodes. Static nodes refer to Redis nodes explicitly listed in the configuration file. If not specified, the default value is 50."
+  - dynamic-slave-read-priority:
+    - name: default
+      value: '50'
+    - name: isReboot
+      value: y
+    - name: range
+      value: [0-100]
+    - name: describe
+      value: "Read-write separation function, the priority of executing read requests from the dynamic Redis slave nodes. Dynamic nodes refer to nodes that are not listed in the configuration file but are discovered dynamically through Redis Sentinel. If not specified, the default value is 50."
+  - refresh-interval:
+    - name: default
+      value: '1'
+    - name: isReboot
+      value: y
+    - name: range
+      value: [1-1000]
+    - name: describe
+      value: "Predixy periodically requests Redis Sentinel to obtain the latest cluster information. This parameter specifies the refresh interval in seconds. If not specified, the default value is 1 second."
+  - server-timeout:
+    - name: default
+      value: '1'
+    - name: isReboot
+      value: y
+    - name: range
+      value: [0-1000]
+    - name: describe
+      value: "The maximum processing/waiting time for a request in Predixy. If Redis does not respond within this time, Predixy will close the connection with Redis and send an error response to the client. This option does not affect blocking commands like BLPOP. If set to 0, this feature is disabled, meaning it will wait indefinitely if Redis does not return a response. If not specified, the default value is 0."
+  - server-failure-limit:
+    - name: default
+      value: '10'
+    - name: isReboot
+      value: y
+    - name: range
+      value: [1-1000]
+    - name: describe
+      value: "The number of errors a Redis instance must encounter before being marked as failed. If not specified, the default value is 10."
+  - server-retry-timeout:
+    - name: default
+      value: '1'
+    - name: isReboot
+      value: y
+    - name: range
+      value: [1-1000]
+    - name: describe
+      value: "The time after which a failed Redis instance will be checked for recovery. If not specified, the default value is 1 second."
+  - keep-alive:
+    - name: default
+      value: '120'
+    - name: isReboot
+      value: y
+    - name: range
+      value: [0-1000]
+    - name: describe
+      value: "The TCP keepalive time for the connection between Predixy and Redis. If set to 0, this feature is disabled. If not specified, the default value is 0."
+  - max-memory:
+    - name: default
+      value: '0'
+    - name: isReboot
+      value: y
+    - name: range
+      value: "[0-25G]"
+    - name: describe
+      value: "Specify the maximum memory that Predixy can allocate, with units (G/M/K). When set to 0, it means there is no limit."
+  - client-timeout:
+    - name: default
+      value: '0'
+    - name: isReboot
+      value: y
+    - name: range
+      value: "[0-1000]"
+    - name: describe
+      value: "Specify the client timeout in seconds. If the client is idle for longer than this time, the connection will be actively closed. When set to 0, this feature is disabled, and the client connection will not be actively closed."
+  - buf-size:
+    - name: default
+      value: '4096'
+    - name: isReboot
+      value: y
+    - name: range
+      value: "[1-100000]"
+    - name: describe
+      value: "IO Buffer size: Predixy internally allocates a buffer of BufSize for receiving client commands and server responses, which are then forwarded to the server or client with zero copy. If this value is too small, it may impact performance; if it's too large, it may waste space and potentially not benefit performance. The appropriate size depends on the actual application scenario. Predixy sets this value to 4096 by default."

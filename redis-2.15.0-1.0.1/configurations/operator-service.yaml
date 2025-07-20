@@ -1,0 +1,26 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareConfiguration
+metadata:
+  name: redis-operator-service
+spec:
+  template: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: {{ .Globe.Name }}
+      labels:  {{range  $key, $value := .Globe.Labels}}  
+        {{ $key }}: {{ $value }} {{- end}}
+    spec:
+      selector:
+        app.kubernetes.io/name: redis-operator
+        app.kubernetes.io/instance: {{ .Globe.Name }}
+      ports:
+      - port: 8080
+        targetPort: 8080
+        protocol: TCP
+        name: redis-operator
+      - name: operate
+        port: 8089
+        protocol: TCP
+        targetPort: 8089
+      type: ClusterIP

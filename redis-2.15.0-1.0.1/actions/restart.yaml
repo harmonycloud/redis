@@ -1,0 +1,40 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareActionBaseline
+metadata:
+  name: redis-restart
+spec:
+  baselineType: "NormalAction"
+  actionType: "restart"
+  necessary:
+    namespace: "string"
+    middlewareName: "string"
+  steps:
+    - name: isPredixy
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - "kubectl"
+          - "get"
+          - "mid"
+          - "-n"
+          - "{{ .Necessary.namespace }}"
+          - "{{ .Necessary.middlewareName }}"
+          - "-o"
+          - "jsonpath='{.spec.predixy}'"
+          - "|"
+          - "awk"
+          - "'/image/ {found=1; exit} END {if (found) print \"predixy\"; else print \"\"}'"
+    - name: restart
+      cmd:
+        command:
+          - "kubectl"
+          - "patch"
+          - "redisCluster"
+          - "{{ .Necessary.middlewareName }}"
+          - "-n"
+          - "{{ .Necessary.namespace }}"
+          - "--type=merge"
+          - "-p"
+          - '{"metadata":{"annotations":{"middleware.maintenance.lock":"graceful-restart",{{ if eq .Step.isPredixy.output "predixy" }}"middleware.maintenance.component":"predixy"{{ end }}}}}'

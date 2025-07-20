@@ -1,0 +1,38 @@
+{{- if and (eq .Values.type "sentinel") (.Values.predixy.enableProxy) }}
+{{- if  .Values.storageClassName }}
+{{- $sc := .Values.storageClassName }}
+{{- $redisname := include "redis.fullname" . }}
+{{- $replicas := .Values.redis.replicas | int }}
+{{- if contains "," .Values.storageClassName  }}
+{{- range $i, $e := until $replicas }}
+apiVersion: v1
+data:
+  storageclass.list: {{ $sc }}
+kind: ConfigMap
+metadata:
+  annotations:
+    statefulsetController: harmonycloud
+  name: {{ $redisname }}-shard-{{ $i }}-sc
+---
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- if and (eq .Values.type "sentinel") (eq .Values.predixy.enableProxy false) }}
+{{- if  .Values.storageClassName }}
+{{- $sc := .Values.storageClassName }}
+{{- $redisname := include "redis.fullname" . }}
+{{- if contains "," .Values.storageClassName  }}
+apiVersion: v1
+data:
+  storageclass.list: {{ $sc }}
+kind: ConfigMap
+metadata:
+  annotations:
+    statefulsetController: harmonycloud
+  name: {{ $redisname }}-sc
+---
+{{- end }}
+{{- end }}
+{{- end }}

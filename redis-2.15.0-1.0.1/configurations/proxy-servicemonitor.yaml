@@ -1,0 +1,28 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareConfiguration
+metadata:
+  name: redis-predixy-servicemonitor
+spec:
+  template: |
+    {{- if .Values.predixy.enableProxy }}
+    apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      labels:
+        app: {{ .Globe.Name }}
+      name: {{ .Globe.Name }}-proxy
+    spec:
+      endpoints:
+        - interval: 30s
+          port: proxy-exporter
+          relabelings:
+          - replacement: redis
+            targetLabel: middleware
+          - sourceLabels: [service]
+            replacement: {{ .Globe.Name }}
+            targetLabel: service
+      selector:
+        matchLabels:
+          app: {{ .Globe.Name }}
+          component: {{ .Globe.Name }}-predixy
+    {{- end }}

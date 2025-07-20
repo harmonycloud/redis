@@ -1,0 +1,141 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareActionBaseline
+metadata:
+  name: pre-redis-proxy-affinity
+spec:
+  baselineType: "PreAction"
+  actionType: "affinity"
+  necessary:
+    podAntiAffinityTopologKey: "string"
+    podAntiAffinity: "string"
+    nodeAffinity: { }
+    predixy:
+      podAntiAffinity: "string"
+  steps:
+    - name: affinity
+      type: "KubectlEdit" # KubectlGet、KubectlEdit、KubectlExec、Exec、HTTP
+      cue: |
+        output: {
+          spec: parameters.spec
+        }
+        parameters: {
+          spec: {
+            parameters: {
+              predixy: {
+                affinity: {
+                  {{- if eq (semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version) false }}
+                  {{- if eq .Necessary.podAntiAffinity "hard"}}
+                  podAntiAffinity: {
+                    requiredDuringSchedulingIgnoredDuringExecution: [
+                      {
+                        labelSelector: {
+                          matchExpressions: [
+                            {
+                              key: "app"
+                              operator: "In"
+                              values: ["{{ .Globe.Name }}"]
+                            },
+                          ]
+                        }
+                        topologyKey: "{{ .Necessary.podAntiAffinityTopologKey }}"
+                      },
+                    ]
+                  }
+                  {{- else if eq .Necessary.podAntiAffinity "soft"}}
+                  podAntiAffinity: {
+                    preferredDuringSchedulingIgnoredDuringExecution: [
+                      {
+                        weight: 100
+                        podAffinityTerm: {
+                          topologyKey: "{{ .Necessary.podAntiAffinityTopologKey }}"
+                          labelSelector: {
+                            matchExpressions: [
+                              {
+                                key: "app"
+                                operator: "In"
+                                values: ["{{ .Globe.Name }}"]
+                              },
+                            ]
+                          }
+                        }
+                      },
+                    ]
+                  }
+                  {{- end}}
+                  {{- end}}
+                  {{- if .Necessary.nodeAffinity }}
+                  {{- with .Necessary.nodeAffinity }}
+                  nodeAffinity: {{ toCue . }}
+                  {{- end }}
+                  {{- end }}
+                }
+                {{- if eq (semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version) true }}        
+                topologySpreadConstraints: [
+                {{- if ne .Necessary.podAntiAffinityTopologKey "kubernetes.io/hostname"}} 
+                  {
+                    maxSkew: 1        
+                    topologyKey: "{{ .Necessary.podAntiAffinityTopologKey | default "" }}"
+                    {{- if empty .Necessary.predixy.podAntiAffinity}}
+                    {{- if eq .Necessary.podAntiAffinity "hard"}}
+                    whenUnsatisfiable: "DoNotSchedule"
+                    {{- else if eq .Necessary.podAntiAffinity "soft"}}
+                    whenUnsatisfiable: "ScheduleAnyway"
+                    {{- end }}
+                    {{- else if eq .Necessary.predixy.podAntiAffinity "hard"}}
+                    whenUnsatisfiable: "DoNotSchedule"
+                    {{- else if eq .Necessary.predixy.podAntiAffinity "soft"}}
+                    whenUnsatisfiable: "ScheduleAnyway"
+                    {{- else if eq .Necessary.predixy.podAntiAffinity ""}}
+                    {{- if eq .Necessary.podAntiAffinity "hard"}}
+                    whenUnsatisfiable: "DoNotSchedule"
+                    {{- else if eq .Necessary.podAntiAffinity "soft"}}
+                    whenUnsatisfiable: "ScheduleAnyway"
+                    {{- end }}
+                    {{- end }}
+                    labelSelector: {
+                      matchLabels: {
+                        "app": "{{ .Globe.Name }}"
+                        "component": "{{ .Globe.Name }}-predixy"
+                      }
+                    }
+                  },
+                {{- end }}
+                  {
+                    maxSkew: 1
+                    topologyKey: "kubernetes.io/hostname"
+                    {{- if empty .Necessary.predixy.podAntiAffinity}}
+                    {{- if eq .Necessary.podAntiAffinity "hard"}}
+                    whenUnsatisfiable: "DoNotSchedule"
+                    {{- else if eq .Necessary.podAntiAffinity "soft"}}
+                    whenUnsatisfiable: "ScheduleAnyway"
+                    {{- end }}
+                    {{- else if eq .Necessary.predixy.podAntiAffinity "hard"}}
+                    whenUnsatisfiable: "DoNotSchedule"
+                    {{- else if eq .Necessary.predixy.podAntiAffinity "soft"}}
+                    whenUnsatisfiable: "ScheduleAnyway"
+                    {{- else if eq .Necessary.predixy.podAntiAffinity ""}}
+                    {{- if eq .Necessary.podAntiAffinity "hard"}}
+                    whenUnsatisfiable: "DoNotSchedule"
+                    {{- else if eq .Necessary.podAntiAffinity "soft"}}
+                    whenUnsatisfiable: "ScheduleAnyway"
+                    {{- end }}
+                    {{- end }}
+                    labelSelector: {
+                      matchLabels: {
+                        "app": "{{ .Globe.Name }}"
+                        "component": "{{ .Globe.Name }}-predixy"
+                      }
+                    }
+                  },
+                ]
+                {{- end }}
+              }
+            }
+          }
+          resource: {
+            apiversion: "middleware.cn/v1"
+            kind: "Middleware"
+            name: "{{ .Globe.Name }}"
+            namespace: "{{ .Globe.Namespace }}"
+          }
+        }

@@ -1,0 +1,64 @@
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: redisclusters.redis.middleware.hc.cn
+  annotations:
+    harmonycloud-middleware-status-phase: 'if .metadata.annotations."middleware.maintenance.lock"=="middlewarebackup" then . + {status: (.status +  {"phase": "Recover"})} else if .metadata.annotations."middleware.maintenance.lock"=="graceful-restart" then . + {status: (.status +  {"phase": "GracefulRestart"})} else . end end'
+    harmonycloud-middleware-status-process: '. + {status: (.status +  {"process": .metadata.annotations."middleware.maintenance.phase"})}'
+    harmonycloud-middleware-status-log: '. + {status: (.status +  {"reason": .metadata.annotations."middleware.maintenance.log"})}'
+  labels:
+    MiddlewareCluster: rediscluster
+  creationTimestamp:
+spec:
+  group: redis.middleware.hc.cn
+  names:
+    plural: redisclusters
+    singular: rediscluster
+    shortNames:
+    - rec
+    kind: RedisCluster
+    listKind: RedisClusterList
+    categories:
+    - all
+  scope: Namespaced
+  preserveUnknownFields: true
+  subresources:
+    status: {}
+    scale:
+      specReplicasPath: ".spec.replicas"
+      statusReplicasPath: ".status.replicas"
+      labelSelectorPath: ".status.labelSelector"
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+  additionalPrinterColumns:
+  - name: DESIRED
+    type: integer
+    description: The number of statefulset managed by the this redisCluster
+    JSONPath: ".status.desiredReplicas"
+  - name: READY
+    type: integer
+    description: The number of pods currently managed by the this redisCluster
+    JSONPath: ".status.replicas"
+  - name: STATUS
+    type: string
+    description: The status of the this redisCluster
+    JSONPath: ".status.phase"
+  - name: SENTINEL_STATUS
+    type: string
+    description: The status of the sentinel of this redisCluster
+    JSONPath: ".status.sentinelPhase"
+  - name: PROXY_STATUS
+    type: string
+    description: The status of the proxy of this redisCluster
+    JSONPath: ".status.proxyPhase"
+  - name: PAUSE
+    type: boolean
+    description: Whether crd this redisCluster's grandson (pod) will not be managed by
+      statefulset
+    JSONPath: ".spec.pause"
+  - name: AGE
+    type: date
+    JSONPath: ".metadata.creationTimestamp"

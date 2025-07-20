@@ -1,0 +1,23 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareConfiguration
+metadata:
+  name: redis-sc
+spec:
+  template: |
+    {{- if and (eq .Values.type "sentinel") (eq .Values.predixy.enableProxy false) }}
+    {{- if  .Values.storageClassName }}
+    {{- $sc := .Values.storageClassName }}
+    {{- $redisname := .Globe.Name }}
+    {{- if contains "," .Values.storageClassName  }}
+    apiVersion: v1
+    data:
+      storageclass.list: {{ $sc }}
+    kind: ConfigMap
+    metadata:
+      annotations:
+        statefulsetController: harmonycloud
+      name: {{ $redisname }}-sc
+    ---
+    {{- end }}
+    {{- end }}
+    {{- end }}
