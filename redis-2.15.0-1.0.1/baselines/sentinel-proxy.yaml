@@ -23,7 +23,7 @@ spec:
         requests:
           cpu: ""
           memory: ""
-        replicas: "1"
+        replicas: "3"
         volume:
           size: ""
           storageClass: ""
@@ -34,7 +34,7 @@ spec:
         requests:
           cpu: ""
           memory: ""
-        replicas: "1"
+        replicas: "3"
         volume:
           size: ""
           storageClass: ""
