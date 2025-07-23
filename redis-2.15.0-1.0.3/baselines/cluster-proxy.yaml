@@ -83,12 +83,12 @@ spec:
       port: 7617
       replicas: "{{ .Necessary.resource.predixy.replicas }}"
       resources:
-        limits:
-          cpu: "{{ .Necessary.resource.predixy.limits.cpu }}"
-          memory: "{{ .Necessary.resource.predixy.limits.memory }}"
         requests:
           cpu: "{{ .Necessary.resource.predixy.requests.cpu }}"
           memory: "{{ .Necessary.resource.predixy.requests.memory }}"
+        limits:
+          cpu: "{{ .Necessary.resource.predixy.limits.cpu }}"
+          memory: "{{ .Necessary.resource.predixy.limits.memory }}"
       securityContext: { }
       strategy:
         rollingUpdate:
