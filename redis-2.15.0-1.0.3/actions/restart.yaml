@@ -25,7 +25,7 @@ spec:
           - "jsonpath='{.spec.predixy}'"
           - "|"
           - "awk"
-          - "'/image/ {found=1; exit} END {if (found) print \"predixy\"; else print \"\"}'"
+          - '''/image/ {found=1; exit} END {if (found) print "predixy"; else print ""}'''
     - name: restart
       cmd:
         command:
@@ -37,4 +37,4 @@ spec:
           - "{{ .Necessary.namespace }}"
           - "--type=merge"
           - "-p"
-          - '{"metadata":{"annotations":{"middleware.maintenance.lock":"graceful-restart",{{ if eq .Step.isPredixy.output "predixy" }}"middleware.maintenance.component":"predixy"{{ end }}}}}'
+          - '{"metadata":{"annotations":{"middleware.maintenance.lock":"graceful-restart"{{ if eq .Step.isPredixy.output "predixy" }},"middleware.maintenance.component":"predixy"{{ end }}}}}'

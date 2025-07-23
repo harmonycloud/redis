@@ -1,13 +1,13 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareBaseline
 metadata:
-  name: redis-sentinel
+  name: redis-cluster-proxy
   labels:
     nephele/user: admin
   annotations:
     datapath: '{{ printf "/data/redis/cluster.local/%s/%s/{POD_NAME}/data" .Globe.Namespace .Globe.Name }}'
-    baselineName: "哨兵模式"
-    description: "哨兵模式基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
+    baselineName: "集群代理模式"
+    description: "集群代理模式基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
 spec:
   operatorBaseline:
     name: redis-operator-standard
@@ -27,6 +27,14 @@ spec:
         volume:
           size: ""
           storageClass: ""
+      predixy:
+        limits:
+          cpu: ""
+          memory: ""
+        requests:
+          cpu: ""
+          memory: ""
+        replicas: "1"
   preActions:
     - name: pre-redis-logging
       parameters:
@@ -46,7 +54,7 @@ spec:
         nodeAffinity: { }
       fixed: false
       exposed: true
-    - name: pre-redis-sentinel-affinity
+    - name: pre-redis-proxy-affinity
       parameters:
         podAntiAffinityTopologKey: "kubernetes.io/hostname"
         podAntiAffinity: "soft"
@@ -56,50 +64,32 @@ spec:
   parameters:
     env:
       TZ: Asia/Shanghai
-    type: sentinel
-    sentinel:
+    type: cluster
+    predixy:
+      image: "predixy:v1.0.3-1.0.0"
+      exporterImage: "predixy-exporter:v0.0.2-1.0.0"
       affinity:
-      env:
-      - name: POD_IP
-        valueFrom:
-          fieldRef:
-            fieldPath: status.podIP
-      - name: REDIS_INSTANCE_PORT
-        value: "26379"
-      - name: TYPE
-        value: "sentinel"
-      - name: PODIP
-        valueFrom:
-          fieldRef:
-            apiVersion: v1
-            fieldPath: status.podIP
-      readinessProbe:
-        exec:
-          command:
-          - sh
-          - -c
-          - redis-cli -h $POD_IP -p 26379 ping
-        timeoutSeconds: 5
-      livenessProbe:
-        exec:
-          command:
-          - sh
-          - -c
-          - redis-cli -h $POD_IP -p 26379 ping
-        timeoutSeconds: 5
-      args: {}
-      command: /bin/launch.sh
-      hostNetwork: false
-      port: 26379
-      replicas: "{{ .Necessary.resource.redis.replicas }}"
-      resources:
-        requests:
-          cpu: 100m
-          memory: 256Mi
+      args: { }
+      enableProxy: true
+      exporterPort: 9121
+      exporterResources:
         limits:
-          cpu: 200m
-          memory: 512Mi
-      securityContext: {}
+          cpu: 50m
+          memory: 100Mi
+        requests:
+          cpu: 25m
+          memory: 50Mi
+      hostNetwork: false
+      port: 7617
+      replicas: "{{ .Necessary.resource.predixy.replicas }}"
+      resources:
+        limits:
+          cpu: "{{ .Necessary.resource.predixy.limits.cpu }}"
+          memory: "{{ .Necessary.resource.predixy.limits.memory }}"
+        requests:
+          cpu: "{{ .Necessary.resource.predixy.requests.cpu }}"
+          memory: "{{ .Necessary.resource.predixy.requests.memory }}"
+      securityContext: { }
       strategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -138,12 +128,12 @@ spec:
       rdbScan: { }
       sentinelPort: 9121
     podManagementPolicy: Parallel
-    replicas: "{{ if Necessary.replicas > 1 }}{{ div .Necessary.replicas 2 }}{{ else }}1{{ end }}"
+    replicas: "{{ .Necessary.resource.redis.replicas }}"
     servicePort: 6379
     repository: "{{ .Necessary.repository }}/"
     updateStrategy:
       type: AutoReceive
-    version: "{{ .Necessary.version }}"
+    version: "7.2.8"
     volumeClaimTemplates:
       - metadata:
           name: redis-data
