@@ -146,7 +146,7 @@ spec:
       rdbScan: { }
       sentinelPort: 9121
     podManagementPolicy: Parallel
-    replicas: "{{ .Necessary.resource.replicas }}"
+    replicas: "{{ .Necessary.resource.redis.replicas }}"
     servicePort: 6379
     repository: "{{ .Necessary.repository }}/"
     updateStrategy:
