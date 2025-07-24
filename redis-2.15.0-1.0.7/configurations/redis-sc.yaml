@@ -1,16 +1,14 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareConfiguration
 metadata:
-  name: redis-shard-sc
+  name: redis-sc
 spec:
   template: |
-    {{- if and (eq .Values.type "sentinel") (.Values.predixy.enableProxy) }}
+    {{- if and (eq .Values.type "sentinel") (eq .Values.predixy.enableProxy "false") }}
     {{- if  .Values.storageClassName }}
     {{- $sc := .Values.storageClassName }}
     {{- $redisname := .Globe.Name }}
-    {{- $replicas := .Values.redis.replicas | int }}
     {{- if contains "," .Values.storageClassName  }}
-    {{- range $i, $e := until $replicas }}
     apiVersion: v1
     data:
       storageclass.list: {{ $sc }}
@@ -18,9 +16,8 @@ spec:
     metadata:
       annotations:
         statefulsetController: harmonycloud
-      name: {{ $redisname }}-shard-{{ $i }}-sc
+      name: {{ $redisname }}-sc
     ---
-    {{- end }}
     {{- end }}
     {{- end }}
     {{- end }}

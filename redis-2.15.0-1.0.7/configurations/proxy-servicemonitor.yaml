@@ -4,7 +4,7 @@ metadata:
   name: redis-predixy-servicemonitor
 spec:
   template: |
-    {{- if .Values.predixy.enableProxy }}
+    {{- if eq .Values.predixy.enableProxy "true" }}
     apiVersion: monitoring.coreos.com/v1
     kind: ServiceMonitor
     metadata:

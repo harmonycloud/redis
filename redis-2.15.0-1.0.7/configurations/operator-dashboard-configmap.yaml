@@ -1,7 +1,7 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareConfiguration
 metadata:
-  name: redis-operator-dashboard-configmap
+  name: redis-operator-dashboard
 spec:
   template: |
     kind: ConfigMap

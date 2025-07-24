@@ -13,7 +13,7 @@ spec:
         role: alert-rules
     spec:
       groups:
-        {{- if .Values.predixy.enableProxy }}
+        {{- if eq .Values.predixy.enableProxy "true" }}
         - name: redis-proxy
           rules:
           - alert: MismatchedRequestResponseRate

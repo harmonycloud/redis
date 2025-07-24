@@ -1,10 +1,10 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareOperatorBaseline
 metadata:
-  name: redis-operator-highly-available
+  name: redis-operator-standard
   annotations:
-    baselineName: "RedisOperator高可用版"
-    description: "高可用版基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
+    baselineName: "RedisOperator标准版"
+    description: "标准版基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
 spec:
   gvks:
     - name: v1alpha1
@@ -212,7 +212,7 @@ spec:
             - list
   deployment:
     spec:
-      replicas: 3
+      replicas: 1
       selector:
         matchLabels:
           app.kubernetes.io/name: redis-operator
@@ -243,7 +243,7 @@ spec:
                   value: Asia/Shanghai
                 - name: CRD_GROUP
                   value: harmonycloud
-                - name: aliyun_logs_middlewarestdoutsddsdsdsa
+                - name: aliyun_logs_middlewarestdout
                   value: stdout
                 - name: aliyun_logs_middlewarestdout_tags
                   value: middleware_name=redis-redis-operator
@@ -274,7 +274,18 @@ spec:
                 requests:
                   cpu: '"{{ .Globe.resource.requests.cpu }}"'
                   memory: '"{{ .Globe.resource.requests.memory }}"'
-          affinity: { }
+          affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - redis
           serviceAccount: "{{ .Globe.Name }}-redis-operator"
   configurations:
     - name: crd-redisclusters
@@ -283,7 +294,7 @@ spec:
       values: { }
     - name: redis-operator-alert-rules
       values: { }
-    - name: redis-operator-dashboard-configmap
+    - name: redis-operator-dashboard
       values: { }
     - name: redis-operator-service
       values: { }
