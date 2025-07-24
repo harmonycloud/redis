@@ -214,12 +214,12 @@ spec:
     - name: redis-predixy-servicemonitor
       values:
         predixy:
-          enableProxy: "{{ if .Parameters.predixy }}true{{ else }}flase{{ end }}"
+          enableProxy: '{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}'
     - name: redis-alert-rule
       values:
         type: "{{ .Parameters.type }}"
         predixy:
-          enableProxy: "{{ if .Parameters.predixy }}true{{ else }}flase{{ end }}"
+          enableProxy: '{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}'
     - name: redis-config
       values:
         type: "{{ .Parameters.type }}"
@@ -238,12 +238,12 @@ spec:
       values:
         type: "{{ .Parameters.type }}"
         predixy:
-          enableProxy: "{{ if .Parameters.predixy }}true{{ else }}flase{{ end }}"
+          enableProxy: '{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}'
     - name: redis-servicemonitor
     - name: redis-shard-sc
       values:
         type: "{{ .Parameters.type }}"
         predixy:
-          enableProxy: "{{ if .Parameters.predixy }}true{{ else }}flase{{ end }}"
+          enableProxy: '{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}'
         redis:
           replicas: "{{ .Necessary.resource.redis.replicas }}"
