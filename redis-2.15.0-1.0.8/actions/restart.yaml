@@ -37,4 +37,4 @@ spec:
           - "{{ .Necessary.namespace }}"
           - "--type=merge"
           - "-p"
-          - '{"metadata":{"annotations":{"middleware.maintenance.lock":"graceful-restart"{{ if eq .Step.isPredixy.output "predixy" }},"middleware.maintenance.component":"predixy"{{ end }}}}}'
+          - '''{"metadata":{"annotations":{"middleware.maintenance.lock":"graceful-restart"{{ if eq .Step.isPredixy.output "predixy" }},"middleware.maintenance.component":"predixy"{{ end }}}}}'''
