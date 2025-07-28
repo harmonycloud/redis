@@ -30,15 +30,6 @@ values:
             value: [0-100000]
           - name: describe
             value: "Time in microseconds needed for a command to be considered slow. Max value is 100000 (100 milliseconds). Default is 10000 (10 milliseconds)."
-      - maxmemory:
-          - name: default
-            value: LEAST(DBInstanceMemory*4/5, 25G)
-          - name: isReboot
-            value: n
-          - name: range
-            value: "[0-25G]"
-          - name: describe
-            value: "Max memory to use for the Redis server."
       - zset-max-ziplist-entries:
           - name: default
             value: 128
@@ -219,15 +210,6 @@ values:
             value: [no|yes]
           - name: describe
             value: "If true, all the slots must be covered by at least one master node. Default is no."
-      - client-output-buffer-limit:
-          - name: default
-            value: "replica maxmemory maxmemory/4 120"
-          - name: isReboot
-            value: n
-          - name: range
-            value: "client-output-buffer-limit <class> <hard limit> <soft limit> <soft seconds>"
-          - name: describe
-            value: "This directive configures the Redis server's behavior when the client output buffers are full. The client buffers can be found in the client structure, and are composed of two different buffers, one for the query buffer (used to accumulate the client query) and one for the output buffer (used to accumulate the reply to the client). The client buffers are limited to a fixed amount of memory, so when a client reaches the specified limit, Redis can close the connection or, if the soft limit is reached, just reply with an error, or a partial reply, and let the client to try again later, when the query buffer will be empty enough for new data to be read. The limit can be specified in absolute bytes, or as a percentage of the total system memory, by using the suffix '%%'. The default configuration is: pubsub 32mb 8mb 60"
       - maxclients:
           - name: default
             value: 15000
