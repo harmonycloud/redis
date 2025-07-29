@@ -1,4 +1,4 @@
-middlewareDefinition: redis-sentinel
+middlewareDefinition: redis-cluster-proxy
 values:
   - name: redis
     path: spec.configurations.redis-config.values.args
@@ -30,6 +30,15 @@ values:
             value: [0-100000]
           - name: describe
             value: "Time in microseconds needed for a command to be considered slow. Max value is 100000 (100 milliseconds). Default is 10000 (10 milliseconds)."
+      - maxmemory:
+          - name: default
+            value: LEAST(DBInstanceMemory*4/5, 25G)
+          - name: isReboot
+            value: n
+          - name: range
+            value: "[0-25G]"
+          - name: describe
+            value: "Max memory to use for the Redis server."
       - zset-max-ziplist-entries:
           - name: default
             value: 128
@@ -129,15 +138,6 @@ values:
             value: [0-100000]
           - name: describe
             value: "The timeout for replication between the primary and secondary nodes."
-      - repl-backlog-size:
-          - name: default
-            value: "256mb"
-          - name: isReboot
-            value: n
-          - name: range
-            value: [1mb-10gb]
-          - name: describe
-            value: "The replication backlog size. The backlog is a buffer that accumulates slave data when slaves are disconnected for some time. The bigger the replication backlog, the longer the time the slaves can be disconnected and later be able to completely synchronize with the master. Default is 256mb."
       - repl-diskless-sync:
           - name: default
             value: "no"
@@ -291,15 +291,6 @@ values:
             value: [no|yes]
           - name: describe
             value: "If true, Redis will compress string objects using LZF when dumping. Default is yes."
-      - maxmemory-policy:
-          - name: default
-            value: "volatile-lru"
-          - name: isReboot
-            value: n
-          - name: range
-            value: [noeviction|allkeys-lru|allkeys-random|volatile-lru|volatile-random|volatile-ttl]
-          - name: describe
-            value: "The policy to apply when Redis runs out of memory. Default is volatile-lru."
       - cluster-replica-validity-factor:
           - name: default
             value: 0
