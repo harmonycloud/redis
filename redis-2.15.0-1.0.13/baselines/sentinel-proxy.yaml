@@ -62,20 +62,20 @@ spec:
         nodeAffinity: { }
       fixed: false
       exposed: true
-    - name: pre-redis-proxy-affinity
-      parameters:
-        podAntiAffinityTopologKey: "kubernetes.io/hostname"
-        podAntiAffinity: "soft"
-        nodeAffinity: { }
-      fixed: false
-      exposed: true
-    - name: pre-redis-sentinel-affinity
-      parameters:
-        podAntiAffinityTopologKey: "kubernetes.io/hostname"
-        podAntiAffinity: "soft"
-        nodeAffinity: { }
-      fixed: false
-      exposed: true
+    # - name: pre-redis-proxy-affinity
+    #   parameters:
+    #     podAntiAffinityTopologKey: "kubernetes.io/hostname"
+    #     podAntiAffinity: "soft"
+    #     nodeAffinity: { }
+    #   fixed: false
+    #   exposed: true
+    # - name: pre-redis-sentinel-affinity
+    #   parameters:
+    #     podAntiAffinityTopologKey: "kubernetes.io/hostname"
+    #     podAntiAffinity: "soft"
+    #     nodeAffinity: { }
+    #   fixed: false
+    #   exposed: true
   parameters:
     env:
       TZ: Asia/Shanghai
