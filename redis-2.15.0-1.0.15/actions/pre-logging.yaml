@@ -34,7 +34,7 @@ spec:
                   {{- if .Necessary.fileLogging }}
                     {
                       name: "aliyun_logs_middlewarelogstash"
-                      value: '{{ printf "/data/redis/cluster.local/%s/%s/**/log/*.log" .Globe.Namespace .Globe.Name }}'
+                      value: "/data/redis/cluster.local/{{ .Globe.Namespace }}/{{ .Globe.Name }}/**/log/*.log"
                     },
                     {
                       name: "aliyun_logs_middlewarelogstash_tags"
