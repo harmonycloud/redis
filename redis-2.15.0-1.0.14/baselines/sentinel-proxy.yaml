@@ -1,13 +1,13 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareBaseline
 metadata:
-  name: redis-cluster
+  name: redis-sentinel-proxy
   labels:
     nephele/user: admin
   annotations:
     datapath: '{{ printf "/data/redis/cluster.local/%s/%s/{POD_NAME}/data" .Globe.Namespace .Globe.Name }}'
-    baselineName: "集群模式"
-    description: "集群模式基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
+    baselineName: "哨兵代理模式"
+    description: "哨兵代理模式基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
 spec:
   operatorBaseline:
     name: redis-operator-standard
@@ -15,18 +15,35 @@ spec:
   necessary:
     repository: ""
     version: "7.2.8"
+    password: ""
     resource:
       redis:
+        limits:
+            cpu: ""
+            memory: ""
+        requests:
+          cpu: ""
+          memory: ""
+        replicas: "1"
+        volume:
+          size: ""
+          storageClass: ""
+      sentinel:
         limits:
           cpu: ""
           memory: ""
         requests:
           cpu: ""
           memory: ""
-        replicas: "6"
-        volume:
-          size: ""
-          storageClass: ""
+        replicas: "1"
+      predixy:
+        limits:
+          cpu: ""
+          memory: ""
+        requests:
+          cpu: ""
+          memory: ""
+        replicas: "1"
   preActions:
     - name: pre-redis-logging
       parameters:
@@ -46,10 +63,100 @@ spec:
         nodeAffinity: { }
       fixed: false
       exposed: true
+    # - name: pre-redis-proxy-affinity
+    #   parameters:
+    #     podAntiAffinityTopologKey: "kubernetes.io/hostname"
+    #     podAntiAffinity: "soft"
+    #     nodeAffinity: { }
+    #   fixed: false
+    #   exposed: true
+    # - name: pre-redis-sentinel-affinity
+    #   parameters:
+    #     podAntiAffinityTopologKey: "kubernetes.io/hostname"
+    #     podAntiAffinity: "soft"
+    #     nodeAffinity: { }
+    #   fixed: false
+    #   exposed: true
   parameters:
     env:
       TZ: Asia/Shanghai
-    type: cluster
+    type: sentinel
+    predixy:
+      image: "predixy:v1.0.3-1.0.0"
+      exporterImage: "predixy-exporter:v0.0.2-1.0.0"
+      affinity:
+      args: { }
+      enableProxy: true
+      exporterPort: 9121
+      exporterResources:
+        limits:
+          cpu: 50m
+          memory: 100Mi
+        requests:
+          cpu: 25m
+          memory: 50Mi
+      hostNetwork: false
+      port: 7617
+      replicas: "{{ .Necessary.resource.predixy.replicas }}"
+      resources:
+        limits:
+          cpu: "{{ .Necessary.resource.predixy.limits.cpu }}"
+          memory: "{{ .Necessary.resource.predixy.limits.memory }}"
+        requests:
+          cpu: "{{ .Necessary.resource.predixy.requests.cpu }}"
+          memory: "{{ .Necessary.resource.predixy.requests.memory }}"
+      securityContext: { }
+      strategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
+    sentinel:
+      affinity:
+      env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: REDIS_INSTANCE_PORT
+          value: "26379"
+        - name: TYPE
+          value: "sentinel"
+        - name: PODIP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+      readinessProbe:
+        exec:
+          command:
+            - sh
+            - -c
+            - redis-cli -h $POD_IP -p 26379 ping
+        timeoutSeconds: 5
+      livenessProbe:
+        exec:
+          command:
+            - sh
+            - -c
+            - redis-cli -h $POD_IP -p 26379 ping
+        timeoutSeconds: 5
+      args: { }
+      command: /bin/launch.sh
+      hostNetwork: false
+      port: 26379
+      replicas: "{{ .Necessary.resource.sentinel.replicas }}"
+      resources:
+        requests:
+          cpu: "{{ .Necessary.resource.sentinel.requests.cpu }}"
+          memory: "{{ .Necessary.resource.sentinel.requests.memory }}"
+        limits:
+          cpu: "{{ .Necessary.resource.sentinel.limits.cpu }}"
+          memory: "{{ .Necessary.resource.sentinel.limits.memory }}"
+      securityContext: { }
+      strategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
     pod:
       - affinity:
         annotations:
@@ -67,7 +174,7 @@ spec:
         initImage: "redis-init:v1.7.3"
         monitorImage: "redis-exporter:v1.0.5-1.0.0"
         logrotateImage: "logrotate:3.21.0-1.0.0"
-        requirepass: "Hc@Cloud01"
+        requirepass: "{{ .Necessary.password }}"
         imagePullPolicy: IfNotPresent
         hostNetwork: false
         resources:
@@ -117,7 +224,7 @@ spec:
     - name: redis-config
       values:
         type: "{{ .Parameters.type }}"
-        version: "{{ .Necessary.version }}"
+        version: "{{ .Parameters.version }}"
         customVolumes: { }
         additionArgs: { }
         args:

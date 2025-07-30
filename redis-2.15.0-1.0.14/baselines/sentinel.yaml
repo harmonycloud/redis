@@ -1,13 +1,13 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareBaseline
 metadata:
-  name: redis-sentinel-proxy
+  name: redis-sentinel
   labels:
     nephele/user: admin
   annotations:
     datapath: '{{ printf "/data/redis/cluster.local/%s/%s/{POD_NAME}/data" .Globe.Namespace .Globe.Name }}'
-    baselineName: "哨兵代理模式"
-    description: "哨兵代理模式基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
+    baselineName: "哨兵模式"
+    description: "哨兵模式基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
 spec:
   operatorBaseline:
     name: redis-operator-standard
@@ -15,27 +15,20 @@ spec:
   necessary:
     repository: ""
     version: "7.2.8"
+    password: ""
     resource:
       redis:
         limits:
-            cpu: ""
-            memory: ""
+          cpu: ""
+          memory: ""
         requests:
           cpu: ""
           memory: ""
-        replicas: "1"
+        replicas: "2"
         volume:
           size: ""
           storageClass: ""
       sentinel:
-        limits:
-          cpu: ""
-          memory: ""
-        requests:
-          cpu: ""
-          memory: ""
-        replicas: "1"
-      predixy:
         limits:
           cpu: ""
           memory: ""
@@ -52,63 +45,27 @@ spec:
       exposed: true
     - name: pre-redis-tolerations
       parameters:
-        tolerations: [ ]
+        tolerations: []
       fixed: false
       exposed: true
     - name: pre-redis-affinity
       parameters:
         podAntiAffinityTopologKey: "kubernetes.io/hostname"
         podAntiAffinity: "soft"
-        nodeAffinity: { }
+        nodeAffinity: {}
       fixed: false
       exposed: true
-    # - name: pre-redis-proxy-affinity
-    #   parameters:
-    #     podAntiAffinityTopologKey: "kubernetes.io/hostname"
-    #     podAntiAffinity: "soft"
-    #     nodeAffinity: { }
-    #   fixed: false
-    #   exposed: true
     # - name: pre-redis-sentinel-affinity
     #   parameters:
     #     podAntiAffinityTopologKey: "kubernetes.io/hostname"
     #     podAntiAffinity: "soft"
-    #     nodeAffinity: { }
+    #     nodeAffinity: {}
     #   fixed: false
     #   exposed: true
   parameters:
     env:
       TZ: Asia/Shanghai
     type: sentinel
-    predixy:
-      image: "predixy:v1.0.3-1.0.0"
-      exporterImage: "predixy-exporter:v0.0.2-1.0.0"
-      affinity:
-      args: { }
-      enableProxy: true
-      exporterPort: 9121
-      exporterResources:
-        limits:
-          cpu: 50m
-          memory: 100Mi
-        requests:
-          cpu: 25m
-          memory: 50Mi
-      hostNetwork: false
-      port: 7617
-      replicas: "{{ .Necessary.resource.predixy.replicas }}"
-      resources:
-        limits:
-          cpu: "{{ .Necessary.resource.predixy.limits.cpu }}"
-          memory: "{{ .Necessary.resource.predixy.limits.memory }}"
-        requests:
-          cpu: "{{ .Necessary.resource.predixy.requests.cpu }}"
-          memory: "{{ .Necessary.resource.predixy.requests.memory }}"
-      securityContext: { }
-      strategy:
-        rollingUpdate:
-          maxUnavailable: 1
-        type: RollingUpdate
     sentinel:
       affinity:
       env:
@@ -139,7 +96,7 @@ spec:
             - -c
             - redis-cli -h $POD_IP -p 26379 ping
         timeoutSeconds: 5
-      args: { }
+      args: {}
       command: /bin/launch.sh
       hostNetwork: false
       port: 26379
@@ -151,7 +108,7 @@ spec:
         limits:
           cpu: "{{ .Necessary.resource.sentinel.limits.cpu }}"
           memory: "{{ .Necessary.resource.sentinel.limits.memory }}"
-      securityContext: { }
+      securityContext: {}
       strategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -173,7 +130,7 @@ spec:
         initImage: "redis-init:v1.7.3"
         monitorImage: "redis-exporter:v1.0.5-1.0.0"
         logrotateImage: "logrotate:3.21.0-1.0.0"
-        requirepass: "Hc@Cloud01"
+        requirepass: "{{ .Necessary.password }}"
         imagePullPolicy: IfNotPresent
         hostNetwork: false
         resources:
@@ -183,11 +140,11 @@ spec:
           requests:
             cpu: "{{ .Necessary.resource.redis.requests.cpu }}"
             memory: "{{ .Necessary.resource.redis.requests.memory }}"
-        updateStrategy: { }
+        updateStrategy: {}
         command: /bin/launch.sh
     exporter:
       port: 9121
-      rdbScan: { }
+      rdbScan: {}
       sentinelPort: 9121
     podManagementPolicy: Parallel
     replicas: "{{ .Necessary.resource.redis.replicas }}"
@@ -200,7 +157,7 @@ spec:
       - metadata:
           name: redis-data
         spec:
-          accessModes: [ "ReadWriteOnce" ]
+          accessModes: ["ReadWriteOnce"]
           storageClassName: "{{ .Necessary.resource.redis.volume.storageClass }}"
           resources:
             requests:
@@ -224,8 +181,8 @@ spec:
       values:
         type: "{{ .Parameters.type }}"
         version: "{{ .Parameters.version }}"
-        customVolumes: { }
-        additionArgs: { }
+        customVolumes: {}
+        additionArgs: {}
         args:
           maxmemory-policy: volatile-lru
           renameCommand:
