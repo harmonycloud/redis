@@ -84,7 +84,7 @@ spec:
                           {
                             key: "app"
                             operator: "In"
-                            values: "{{ .Globe.Name }}"
+                            values: ["{{ .Globe.Name }}"]
                           },
                           {
                             key: "component"
