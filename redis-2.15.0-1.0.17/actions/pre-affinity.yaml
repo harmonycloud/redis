@@ -61,10 +61,10 @@ spec:
                       ]
                     }
                     {{- end}}
-                    {{- end}}
                     {{- if .Necessary.nodeAffinity }}
                     {{- with .Necessary.nodeAffinity }}
                     nodeAffinity: {{ toCue . }}
+                    {{- end }}
                     {{- end }}
                   }
                   {{- end }}
