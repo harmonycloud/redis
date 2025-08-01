@@ -1,7 +1,7 @@
-middlewareDefinition: redis-cluster
+middlewareDefinition: redis-sentinel-proxy
 values:
   - name: redis
-    path: spec.configurations.redis-config.values.args
+    path: spec|configurations|redis-config|values|args
     parameters:
       - appendonly:
           - name: default

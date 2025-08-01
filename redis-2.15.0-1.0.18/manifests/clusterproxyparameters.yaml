@@ -1,7 +1,7 @@
-middlewareDefinition: redis-sentinel-proxy
+middlewareDefinition: redis-cluster-proxy
 values:
   - name: redis
-    path: spec.configurations.redis-config.values.args
+    path: spec|configurations|redis-config|values|args
     parameters:
       - appendonly:
           - name: default
@@ -30,6 +30,15 @@ values:
             value: [0-100000]
           - name: describe
             value: "Time in microseconds needed for a command to be considered slow. Max value is 100000 (100 milliseconds). Default is 10000 (10 milliseconds)."
+      - maxmemory:
+          - name: default
+            value: LEAST(DBInstanceMemory*4/5, 25G)
+          - name: isReboot
+            value: n
+          - name: range
+            value: "[0-25G]"
+          - name: describe
+            value: "Max memory to use for the Redis server."
       - zset-max-ziplist-entries:
           - name: default
             value: 128
@@ -282,15 +291,6 @@ values:
             value: [no|yes]
           - name: describe
             value: "If true, Redis will compress string objects using LZF when dumping. Default is yes."
-      - maxmemory-policy:
-          - name: default
-            value: "volatile-lru"
-          - name: isReboot
-            value: n
-          - name: range
-            value: [noeviction|allkeys-lru|allkeys-random|volatile-lru|volatile-random|volatile-ttl]
-          - name: describe
-            value: "The policy to apply when Redis runs out of memory. Default is volatile-lru."
       - cluster-replica-validity-factor:
           - name: default
             value: 0
