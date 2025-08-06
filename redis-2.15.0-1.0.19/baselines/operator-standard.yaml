@@ -22,6 +22,10 @@ spec:
         cpu: "100m"
         memory: "256Mi"
   preActions:
+    - name: pre-redis-operator-alertrule-labels
+      parameters:
+        labels: {}
+      exposed: false
     - name: pre-redis-operator-affinity
       parameters:
         podAntiAffinityTopologKey: "kubernetes.io/hostname"
@@ -292,7 +296,7 @@ spec:
       values: { }
     - name: crd-redisshakes
       values: { }
-    - name: redis-operator-alert-rules
+    - name: redis-operator-alertrule
       values: { }
     - name: redis-operator-dashboard
       values: { }

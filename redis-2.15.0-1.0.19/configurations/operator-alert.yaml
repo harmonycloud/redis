@@ -1,7 +1,7 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareConfiguration
 metadata:
-  name: redis-operator-alert-rules
+  name: redis-operator-alertrule
 spec:
   template: |
     apiVersion: monitoring.coreos.com/v1
@@ -27,6 +27,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
             - alert: redisOperatorMemoryUsageHigh
               annotations:
                 message: 'The memory usage of Redis Operator has exceeded 90%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, Pod: {{`{{ $labels.pod }}`}})'
@@ -34,6 +37,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
             - alert: redisOperatorInstanceNotRunning
               annotations:
                 message: "Redis operator instances stopped working.(Namespace: {{ .Globe.Namespace }}, Pod: {{`{{ $labels.pod }}`}})"
@@ -42,6 +48,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
             - alert: multipleRedisOperatorInstanceNotRunning
               annotations:
                 message: "Multiple Redis operator instances stopped running.(Namespace: {{ .Globe.Namespace }}, Pod: {{`{{ $labels.pod }}`}})"
@@ -49,3 +58,6 @@ spec:
               for: 5m
               labels:
                 severity: critical
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}

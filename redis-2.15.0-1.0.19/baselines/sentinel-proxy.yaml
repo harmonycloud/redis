@@ -45,6 +45,10 @@ spec:
           memory: ""
         replicas: "1"
   preActions:
+    - name: pre-redis-alertrule-labels
+      parameters:
+        labels: {}
+      exposed: false
     - name: pre-redis-logging
       parameters:
         fileLogging: true
@@ -216,7 +220,7 @@ spec:
       values:
         predixy:
           enableProxy: '{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}'
-    - name: redis-alert-rule
+    - name: redis-alertrule
       values:
         type: "{{ .Parameters.type }}"
         predixy:

@@ -1,7 +1,7 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareConfiguration
 metadata:
-  name: redis-alert-rule
+  name: redis-alertrule
 spec:
   template: |
     apiVersion: monitoring.coreos.com/v1
@@ -21,6 +21,9 @@ spec:
             for: 5m
             labels:
               severity: warning
+              {{- with .Values.labels }}
+              {{ toYaml . }}
+              {{- end }}
             annotations:
               message: "Mismatched request/response rate detected on redis proxy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
               metric: predixy_cluster_total_requests
@@ -39,6 +42,9 @@ spec:
             for: 5m
             labels:
               severity: warning
+              {{- with .Values.labels }}
+              {{ toYaml . }}
+              {{- end }}
         - name: redis-rules
           rules:
             - alert: RedisFailOver
@@ -46,6 +52,9 @@ spec:
               for: 30s
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
@@ -56,6 +65,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
@@ -66,6 +78,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
@@ -76,6 +91,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
@@ -95,6 +113,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
               annotations:
                 message: "Redis instance lost a slave. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})"
             # 备份失败
@@ -112,6 +133,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
               annotations:
                 message: 'Redis is running out of configured maxmemory (> current_value={{ `{{ printf "%.0f" $value }}` }}%). (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})'
             - alert: RedisVolumeUsage70
@@ -119,6 +143,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 message: 'The disk usage of Redis has exceeded 70%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
@@ -127,6 +154,9 @@ spec:
               for: 5m
               labels:
                 severity: critical
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 message: 'The disk usage of Redis has exceeded 85%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
@@ -137,6 +167,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
             - alert: RedisCpuUsageHigh
               annotations:
                 message: 'The cpu usage of Redis has exceeded 90%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})'
@@ -144,7 +177,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
-    
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
         {{- if eq .Values.type "sentinel" }}
         - name: redis-sentinel
           rules:
@@ -154,6 +189,9 @@ spec:
               for: 5m
               labels:
                 severity: critical
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
@@ -164,6 +202,9 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                {{- with .Values.labels }}
+                {{ toYaml . }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
