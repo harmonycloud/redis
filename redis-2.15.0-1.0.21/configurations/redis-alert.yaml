@@ -24,7 +24,7 @@ spec:
               project: zeus
               subject: middleware
               {{- with .Values.labels }}
-              {{ toYaml . }}
+              {{- toYaml . | nindent 10 }}
               {{- end }}
             annotations:
               message: "Mismatched request/response rate detected on redis proxy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
@@ -47,7 +47,7 @@ spec:
               project: zeus
               subject: middleware
               {{- with .Values.labels }}
-              {{ toYaml . }}
+              {{- toYaml . | nindent 10 }}
               {{- end }}
         - name: redis-rules
           rules:
@@ -59,7 +59,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
                 product: harmonycloud
@@ -73,7 +73,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
                 product: harmonycloud
@@ -87,7 +87,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
                 product: harmonycloud
@@ -101,7 +101,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
                 product: harmonycloud
@@ -115,7 +115,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
                 message: "Redis instance lost a slave. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})"
@@ -127,7 +127,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
                 message: 'Redis is running out of configured maxmemory (> current_value={{ `{{ printf "%.0f" $value }}` }}%). (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})'
@@ -139,7 +139,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
                 product: harmonycloud
@@ -152,7 +152,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
                 product: harmonycloud
@@ -167,7 +167,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
             - alert: RedisCpuUsageHigh
               annotations:
@@ -179,7 +179,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
         {{- if eq .Values.type "sentinel" }}
         - name: redis-sentinel
@@ -192,7 +192,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
                 product: harmonycloud
@@ -206,7 +206,7 @@ spec:
                 project: zeus
                 subject: middleware
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
                 product: harmonycloud

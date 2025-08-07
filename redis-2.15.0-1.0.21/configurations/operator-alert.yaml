@@ -30,7 +30,7 @@ spec:
                 project: zeus
                 subject: operator
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
             - alert: redisOperatorMemoryUsageHigh
               annotations:
@@ -42,7 +42,7 @@ spec:
                 project: zeus
                 subject: operator
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
             - alert: redisOperatorInstanceNotRunning
               annotations:
@@ -55,7 +55,7 @@ spec:
                 project: zeus
                 subject: operator
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
             - alert: multipleRedisOperatorInstanceNotRunning
               annotations:
@@ -67,5 +67,5 @@ spec:
                 project: zeus
                 subject: operator
                 {{- with .Values.labels }}
-                {{ toYaml . }}
+                {{- toYaml . | nindent 12 }}
                 {{- end }}
