@@ -1,13 +1,13 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareBaseline
 metadata:
-  name: redis-cluster
+  name: redis-sentinel
   labels:
     nephele/user: admin
   annotations:
     datapath: '{{ printf "/data/redis/cluster.local/%s/%s/{POD_NAME}/data" .Globe.Namespace .Globe.Name }}'
-    baselineName: "集群模式"
-    description: "集群模式基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
+    baselineName: "哨兵模式"
+    description: "哨兵模式基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
 spec:
   operatorBaseline:
     name: redis-operator-standard
@@ -24,10 +24,18 @@ spec:
         requests:
           cpu: ""
           memory: ""
-        replicas: "6"
+        replicas: "2"
         volume:
           size: ""
           storageClass: ""
+      sentinel:
+        limits:
+          cpu: ""
+          memory: ""
+        requests:
+          cpu: ""
+          memory: ""
+        replicas: "1"
   preActions:
     - name: pre-redis-alertrule-labels
       parameters:
@@ -41,20 +49,74 @@ spec:
       exposed: true
     - name: pre-redis-tolerations
       parameters:
-        tolerations: [ ]
+        tolerations: []
       fixed: false
       exposed: true
     - name: pre-redis-affinity
       parameters:
         podAntiAffinityTopologKey: "kubernetes.io/hostname"
         podAntiAffinity: "soft"
-        nodeAffinity: { }
+        nodeAffinity: {}
       fixed: false
       exposed: true
+    # - name: pre-redis-sentinel-affinity
+    #   parameters:
+    #     podAntiAffinityTopologKey: "kubernetes.io/hostname"
+    #     podAntiAffinity: "soft"
+    #     nodeAffinity: {}
+    #   fixed: false
+    #   exposed: true
   parameters:
     env:
       TZ: Asia/Shanghai
-    type: cluster
+    type: sentinel
+    sentinel:
+      affinity:
+      env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: REDIS_INSTANCE_PORT
+          value: "26379"
+        - name: TYPE
+          value: "sentinel"
+        - name: PODIP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+      readinessProbe:
+        exec:
+          command:
+            - sh
+            - -c
+            - redis-cli -h $POD_IP -p 26379 ping
+        timeoutSeconds: 5
+      livenessProbe:
+        exec:
+          command:
+            - sh
+            - -c
+            - redis-cli -h $POD_IP -p 26379 ping
+        timeoutSeconds: 5
+      args: {}
+      command: /bin/launch.sh
+      hostNetwork: false
+      port: 26379
+      replicas: "{{ .Necessary.resource.sentinel.replicas }}"
+      resources:
+        requests:
+          cpu: "{{ .Necessary.resource.sentinel.requests.cpu }}"
+          memory: "{{ .Necessary.resource.sentinel.requests.memory }}"
+        limits:
+          cpu: "{{ .Necessary.resource.sentinel.limits.cpu }}"
+          memory: "{{ .Necessary.resource.sentinel.limits.memory }}"
+      securityContext: {}
+      strategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
     pod:
       - affinity:
         annotations:
@@ -82,11 +144,11 @@ spec:
           requests:
             cpu: "{{ .Necessary.resource.redis.requests.cpu }}"
             memory: "{{ .Necessary.resource.redis.requests.memory }}"
-        updateStrategy: { }
+        updateStrategy: {}
         command: /bin/launch.sh
     exporter:
       port: 9121
-      rdbScan: { }
+      rdbScan: {}
       sentinelPort: 9121
     podManagementPolicy: Parallel
     replicas: "{{ .Necessary.resource.redis.replicas }}"
@@ -99,7 +161,7 @@ spec:
       - metadata:
           name: redis-data
         spec:
-          accessModes: [ "ReadWriteOnce" ]
+          accessModes: ["ReadWriteOnce"]
           storageClassName: "{{ .Necessary.resource.redis.volume.storageClass }}"
           resources:
             requests:
@@ -113,18 +175,18 @@ spec:
     - name: redis-predixy-servicemonitor
       values:
         predixy:
-          enableProxy: '{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}'
+          enableProxy: '"{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}"'
     - name: redis-alertrule
       values:
         type: "{{ .Parameters.type }}"
         predixy:
-          enableProxy: '{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}'
+          enableProxy: '"{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}"'
     - name: redis-config
       values:
         type: "{{ .Parameters.type }}"
-        version: "{{ .Necessary.version }}"
-        customVolumes: { }
-        additionArgs: { }
+        version: "{{ .Parameters.version }}"
+        customVolumes: {}
+        additionArgs: {}
         args:
           maxmemory-policy: volatile-lru
           renameCommand:
@@ -137,12 +199,12 @@ spec:
       values:
         type: "{{ .Parameters.type }}"
         predixy:
-          enableProxy: '{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}'
+          enableProxy: '"{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}"'
     - name: redis-servicemonitor
     - name: redis-shard-sc
       values:
         type: "{{ .Parameters.type }}"
         predixy:
-          enableProxy: '{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}'
+          enableProxy: '"{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}"'
         redis:
           replicas: "{{ .Necessary.resource.redis.replicas }}"
