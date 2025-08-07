@@ -21,6 +21,8 @@ spec:
             for: 5m
             labels:
               severity: warning
+              project: zeus
+              subject: middleware
               {{- with .Values.labels }}
               {{ toYaml . }}
               {{- end }}
@@ -42,6 +44,8 @@ spec:
             for: 5m
             labels:
               severity: warning
+              project: zeus
+              subject: middleware
               {{- with .Values.labels }}
               {{ toYaml . }}
               {{- end }}
@@ -52,6 +56,8 @@ spec:
               for: 30s
               labels:
                 severity: warning
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
@@ -59,12 +65,13 @@ spec:
                 product: harmonycloud
                 service: metrics
                 message: "Redis instance failover. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
-            # 节点不健康
             - alert: RedisUnhealthy
               expr: redis_up{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} < 1 or kube_pod_container_status_running{container="redis-cluster", pod=~'{{ .Globe.Name }}-[0-9]|{{ .Globe.Name }}-shard-[0-9]-[0-9]'} == 0
               for: 5m
               labels:
                 severity: warning
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
@@ -72,12 +79,13 @@ spec:
                 product: harmonycloud
                 service: metrics
                 message: "Redis instance is unhealthy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
-            # 连接客户端过多
             - alert: RedisLargConnect
               expr: redis_connected_clients{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} * 100/redis_config_maxclients{service='{{ .Globe.Name }}', namespace="{{ .Globe.Namespace }}"} > 80
               for: 5m
               labels:
                 severity: warning
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
@@ -85,12 +93,13 @@ spec:
                 product: harmonycloud
                 service: metrics
                 message: 'Redis client connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis_config_maxclients configuration. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})'
-            # 连接阻塞过多
             - alert: RedisLargeBlockConnect
               expr: redis_blocked_clients{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} * 100/redis_connected_clients{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} > 20
               for: 5m
               labels:
                 severity: warning
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
@@ -98,41 +107,25 @@ spec:
                 product: harmonycloud
                 service: metrics
                 message: 'Redis block connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis client connections.. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})'
-            # 连接拒绝
-    #        - alert: RedisRejectedConnections
-    #          expr: increase(redis_rejected_connections_total{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}[1m]) > 0
-    #          for: 5m
-    #          labels:
-    #            severity: warning
-    #          annotations:
-    #            message: "Redis instance has some rejected connections, current_value={{ `{{ $value }}` }}. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
-    
-            # 副本数量不正确
             - alert: RedisReplicationBroken
               expr: delta(redis_connected_slaves{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}[3m]) < 0
               for: 5m
               labels:
                 severity: warning
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
               annotations:
                 message: "Redis instance lost a slave. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})"
-            # 备份失败
-    #        - alert: RedisMissingBackup
-    #          expr: time() - redis_rdb_last_save_timestamp_seconds{service='{{ .Globe.Name }}'} > 60 * 60 * 24
-    #          for: 0m
-    #          labels:
-    #            severity: critical
-    #          annotations:
-    #            summary: Redis missing backup (instance {{`{{ $labels.instance }}`}})
-    #            description: Redis has not been backuped for 24 hours\n  VALUE = {{`{{ $value }}`}}\n  LABELS {{`{ { $labels } }`}}
-            # 内存过高
             - alert: RedisOutOfConfiguredMaxmemory
               expr:  (redis_memory_used_bytes{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} * 100 / redis_memory_max_bytes{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}) > 90 and redis_memory_max_bytes{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}!=0
               for: 5m
               labels:
                 severity: warning
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
@@ -143,6 +136,8 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
@@ -154,6 +149,8 @@ spec:
               for: 5m
               labels:
                 severity: critical
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
@@ -167,6 +164,8 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
@@ -177,18 +176,21 @@ spec:
               for: 5m
               labels:
                 severity: warning
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
         {{- if eq .Values.type "sentinel" }}
         - name: redis-sentinel
           rules:
-            # 哨兵监控的master不正常
             - alert: RedisSentinelWatchNodeUnhealthy
               expr: redis_sentinel_master_status{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} == 0
               for: 5m
               labels:
                 severity: critical
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
@@ -196,12 +198,13 @@ spec:
                 product: harmonycloud
                 service: metrics
                 message: "Redis master node monitored by the sentinel is unhealthy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
-            # 哨兵数量不对
             - alert: RedisSentries_num
               expr: redis_sentinel_master_sentinels{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}%2 == 0
               for: 5m
               labels:
                 severity: warning
+                project: zeus
+                subject: middleware
                 {{- with .Values.labels }}
                 {{ toYaml . }}
                 {{- end }}
