@@ -17,7 +17,7 @@ spec:
         command:
           - "kubectl"
           - "get"
-          - "mid"
+          - "rec"
           - "-n"
           - "{{ .Necessary.namespace }}"
           - "{{ .Globe.MiddlewareName }}"
