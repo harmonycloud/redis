@@ -5,7 +5,6 @@ metadata:
 spec:
   baselineType: "NormalAction"
   actionType: "expose"
-#  supportBaseline: "redis-cluster"
   necessary:
     exposeType: "external" # external、readWrite、readOnly、predixy
     host: ""
@@ -13,6 +12,20 @@ spec:
     protocol: ""
     ipVersion: ""
   steps:
+    - name: getUid
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - "kubectl"
+          - "get"
+          - "rec"
+          - "-n"
+          - "{{ .Globe.Namespace }}"
+          - "{{ .Globe.MiddlewareName }}"
+          - "-o"
+          - "jsonpath='{.metadata.uid}'"
     - name: createClusterIP
       output:
         type: "string"
@@ -21,39 +34,54 @@ spec:
         command:
           - |
             {{- if eq .Necessary.exposeType "external" }}
-            for key in "${!addresses[@]}"
-            do
-              if [[ "$key" == *"-pod-16379" ]]; then
-                podName=${original%-pod-16379}
+            {{- $index := 0 }}
+            {{- range $key, $value := .Necessary.addresses }}
+            ADDRESSES_KEY_{{ $index }}="{{ $key }}"
+            ADDRESSES_VALUE_{{ $index }}="{{ $value }}"
+            {{- $index = add $index 1 }}
+            {{- end }}
+            ADDRESSES_COUNT="{{ len .Necessary.addresses }}"
+
+            i=0
+            while [ $i -lt $ADDRESSES_COUNT ]; do
+              # 正确获取变量值
+              key_var="ADDRESSES_KEY_$i"
+              value_var="ADDRESSES_VALUE_$i"
+              key=$(eval "echo \$$key_var")
+              value=$(eval "echo \$$value_var")
+              case "$key" in 
+                *-pod-16379)        
+                podName=$(echo "$key" | sed 's/-pod-16379$//')
                 kubectl apply -f - <<EOF
-                apiVersion: v1
-                kind: Service
-                metadata:
-                  name: $podName-pod-16379
-                  namespace: xwj
-                  ownerReferences:
-                    - apiVersion: apiVersion: redis.middleware.hc.cn/v1alpha1
-                      blockOwnerDeletion: false
-                      controller: true
-                      kind: RedisCluster
-                      name: {{ .Globe.MiddlewareName }}
-                spec:
-                  ports:
-                    - name: redis
-                      port: 16379
-                      protocol: {{ .Necessary.protocol }}
-                      targetPort: 16379
-                  selector:
-                    app: {{ .Globe.MiddlewareName }}
-                    component: {{ .Globe.MiddlewareName }}
-                    middleware: redis
-                    statefulset.kubernetes.io/pod-name: $podName
-                  type: ClusterIP
-                EOF
-              fi
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: ${podName}-pod-16379
+              namespace: {{ .Globe.Namespace }}
+              ownerReferences:
+                - apiVersion: redis.middleware.hc.cn/v1alpha1
+                  blockOwnerDeletion: false
+                  controller: true
+                  kind: RedisCluster
+                  name: {{ .Globe.MiddlewareName }}
+                  uid: {{ .Step.getUid.output }}
+            spec:
+              ports:
+                - name: redis
+                  port: 16379
+                  protocol: {{ .Necessary.protocol }}
+                  targetPort: 16379
+              selector:
+                app: {{ .Globe.MiddlewareName }}
+                component: {{ .Globe.MiddlewareName }}
+                middleware: redis
+                statefulset.kubernetes.io/pod-name: ${podName}
+              type: ClusterIP
+            EOF
+                  ;;
+              esac
+              i=$((i + 1)) 
             done
-            {{- else }}
-            printf ""
             {{- end }}
     - name: updateCluster
       type: "KubectlEdit" # KubectlGet、KubectlEdit、KubectlExec、Exec、HTTP
@@ -64,27 +92,29 @@ spec:
         parameters: {
           spec: {
             parameters: {
-              pod: {
-                externalAccess: {
-                  enabled: true
-                  addresses: [
-                  {{- range $key, $value := .Necessary.addresses }}
-                  {{- if hasSuffix "-pod-16379" $key }}
-                    {{- $redisInstance := . | trimSuffix "-pod-16379" }}
-                    {{ $redisInstance }}: {{ .Necessary.host }}:$value
-                  {{- end }}
-                  {{- end }}      
-                  ]
-                  busPorts: [
-                  {{- range $key, $value := .Necessary.addresses }}
-                  {{- if not (hasSuffix "-pod-16379" $key) }}
-                    {{- $redisInstance := . | trimSuffix "-pod" }}
-                    {{ $redisInstance }}: $value
-                  {{- end }}
-                  {{- end }}                   
-                  ]
-                }
-              }
+              pod: [
+                {
+                  externalAccess: {
+                    enabled: true
+                    addresses: {
+                    {{- range $key, $value := .Necessary.addresses }}
+                    {{- if not (hasSuffix "-pod-16379" $key) }}
+                      {{- $redisInstance := $key | trimSuffix "-pod" }}
+                      "{{ $redisInstance }}": "{{ $.Necessary.host }}:{{ $value }}"
+                    {{- end }}
+                    {{- end }}      
+                    }
+                    busPorts: {
+                    {{- range $key, $value := .Necessary.addresses }}
+                    {{- if hasSuffix "-pod-16379" $key }}
+                      {{- $redisInstance := $key | trimSuffix "-pod-16379" }}
+                      "{{ $redisInstance }}": {{ $value }}
+                    {{- end }}
+                    {{- end }}                   
+                    }
+                  }
+                },
+              ]
             }
           }
           resource: {
@@ -101,39 +131,49 @@ spec:
       cmd:
         command:
           - |
-            for key in "${!addresses[@]}"
-            do
-              podName=""
-              if [[ "$key" == *"-pod-16379" ]]; then
-                podName=${original%-pod-16379}
-              else
-                podName=${original%-pod}
-              fi
-            
+            {{- $index := 0 }}
+            {{- range $key, $value := .Necessary.addresses }}
+            ADDRESSES_KEY_{{ $index }}="{{ $key }}"
+            ADDRESSES_VALUE_{{ $index }}="{{ $value }}"
+            {{- $index = add $index 1 }}
+            {{- end }}
+            ADDRESSES_COUNT="{{ len .Necessary.addresses }}"
+
+            i=0
+            while [ $i -lt $ADDRESSES_COUNT ]; do
+              # 正确获取变量值
+              key_var="ADDRESSES_KEY_$i"
+              value_var="ADDRESSES_VALUE_$i"
+              key=$(eval "echo \$$key_var")
+              value=$(eval "echo \$$value_var")
+              port=$(kubectl get svc -n {{ .Globe.Namespace }} $key -o jsonpath='{.spec.ports[?(@.name=="redis")].port}')
+              targetPort=$(kubectl get svc -n {{ .Globe.Namespace }} $key -o jsonpath='{.spec.ports[?(@.name=="redis")].targetPort}')
               kubectl apply -f - <<EOF
-              apiVersion: v1
-              kind: Service
-              metadata:
-                name: $podName-pod-nodeport
-                namespace: xwj
-                ownerReferences:
-                  - apiVersion: redis.middleware.hc.cn/v1alpha1
-                    blockOwnerDeletion: false
-                    controller: true
-                    kind: RedisCluster
-                    name: {{ .Globe.MiddlewareName }}
-              spec:
-                ports:
-                  - name: redis
-                    port: 6379
-                    protocol: {{ .Necessary.protocol }}
-                    targetPort: 6379
-                    nodePort: ${addresses[$key]}
-                selector:
-                  app: {{ .Globe.MiddlewareName }}
-                  component: {{ .Globe.MiddlewareName }}
-                  middleware: redis
-                  statefulset.kubernetes.io/pod-name: $podName
-                type: NodePort
-              EOF
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: ${key}-nodeport
+              namespace: {{ .Globe.Namespace }}
+              ownerReferences:
+                - apiVersion: redis.middleware.hc.cn/v1alpha1
+                  blockOwnerDeletion: false
+                  controller: true
+                  kind: RedisCluster
+                  name: {{ .Globe.MiddlewareName }}
+                  uid: {{ .Step.getUid.output }}
+            spec:
+              ports:
+                - name: redis
+                  port: $port
+                  protocol: {{ .Necessary.protocol }}
+                  targetPort: $targetPort
+                  nodePort: ${value}
+              selector:
+                app: {{ .Globe.MiddlewareName }}
+                component: {{ .Globe.MiddlewareName }}
+                middleware: redis
+                statefulset.kubernetes.io/pod-name: $podName
+              type: NodePort
+            EOF
+              i=$((i + 1)) 
             done
