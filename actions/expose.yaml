@@ -1,0 +1,139 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareActionBaseline
+metadata:
+  name: redis-expose
+spec:
+  baselineType: "NormalAction"
+  actionType: "expose"
+#  supportBaseline: "redis-cluster"
+  necessary:
+    exposeType: "external" # external、readWrite、readOnly、predixy
+    host: ""
+    addresses: {}
+    protocol: ""
+    ipVersion: ""
+  steps:
+    - name: createClusterIP
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - |
+            {{- if eq .Necessary.exposeType "external" }}
+            for key in "${!addresses[@]}"
+            do
+              if [[ "$key" == *"-pod-16379" ]]; then
+                podName=${original%-pod-16379}
+                kubectl apply -f - <<EOF
+                apiVersion: v1
+                kind: Service
+                metadata:
+                  name: $podName-pod-16379
+                  namespace: xwj
+                  ownerReferences:
+                    - apiVersion: apiVersion: redis.middleware.hc.cn/v1alpha1
+                      blockOwnerDeletion: false
+                      controller: true
+                      kind: RedisCluster
+                      name: {{ .Globe.MiddlewareName }}
+                spec:
+                  ports:
+                    - name: redis
+                      port: 16379
+                      protocol: {{ .Necessary.protocol }}
+                      targetPort: 16379
+                  selector:
+                    app: {{ .Globe.MiddlewareName }}
+                    component: {{ .Globe.MiddlewareName }}
+                    middleware: redis
+                    statefulset.kubernetes.io/pod-name: $podName
+                  type: ClusterIP
+                EOF
+              fi
+            done
+            {{- else }}
+            printf ""
+            {{- end }}
+    - name: updateCluster
+      type: "KubectlEdit" # KubectlGet、KubectlEdit、KubectlExec、Exec、HTTP
+      cue: |
+        output: {
+          spec: parameters.spec
+        }
+        parameters: {
+          spec: {
+            parameters: {
+              pod: {
+                externalAccess: {
+                  enabled: true
+                  addresses: [
+                  {{- range $key, $value := .Necessary.addresses }}
+                  {{- if hasSuffix "-pod-16379" $key }}
+                    {{- $redisInstance := . | trimSuffix "-pod-16379" }}
+                    {{ $redisInstance }}: {{ .Necessary.host }}:$value
+                  {{- end }}
+                  {{- end }}      
+                  ]
+                  busPorts: [
+                  {{- range $key, $value := .Necessary.addresses }}
+                  {{- if not (hasSuffix "-pod-16379" $key) }}
+                    {{- $redisInstance := . | trimSuffix "-pod" }}
+                    {{ $redisInstance }}: $value
+                  {{- end }}
+                  {{- end }}                   
+                  ]
+                }
+              }
+            }
+          }
+          resource: {
+            apiversion: "middleware.cn/v1"
+            kind: "Middleware"
+            name: "{{ .Globe.MiddlewareName }}"
+            namespace: "{{ .Globe.Namespace }}"
+          }
+        }
+    - name: createNodePort
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - |
+            for key in "${!addresses[@]}"
+            do
+              podName=""
+              if [[ "$key" == *"-pod-16379" ]]; then
+                podName=${original%-pod-16379}
+              else
+                podName=${original%-pod}
+              fi
+            
+              kubectl apply -f - <<EOF
+              apiVersion: v1
+              kind: Service
+              metadata:
+                name: $podName-pod-nodeport
+                namespace: xwj
+                ownerReferences:
+                  - apiVersion: redis.middleware.hc.cn/v1alpha1
+                    blockOwnerDeletion: false
+                    controller: true
+                    kind: RedisCluster
+                    name: {{ .Globe.MiddlewareName }}
+              spec:
+                ports:
+                  - name: redis
+                    port: 6379
+                    protocol: {{ .Necessary.protocol }}
+                    targetPort: 6379
+                    nodePort: ${addresses[$key]}
+                selector:
+                  app: {{ .Globe.MiddlewareName }}
+                  component: {{ .Globe.MiddlewareName }}
+                  middleware: redis
+                  statefulset.kubernetes.io/pod-name: $podName
+                type: NodePort
+              EOF
+            done
