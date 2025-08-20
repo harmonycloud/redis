@@ -1,6 +1,0 @@
-apiVersion: v2
-appVersion: 2.15.0
-description: CloudDB Redis缓存数据库
-name: redis-operator
-type: application
-version: 2.15.0

@@ -1,9 +1,0 @@
-type: sentinel
-
-podAntiAffinityTopologKey:  zone
-
-tolerations:
-  - operator: Exists
-
-predixy:
-  enableProxy: true

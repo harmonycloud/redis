@@ -1,2 +1,1 @@
-# redis
-
+[Harmonycloud Redis 快速入门](https://zeusharmonycloud.yuque.com/docs/share/27208e5b-1e62-48c9-9199-eab866714f9e?#)
