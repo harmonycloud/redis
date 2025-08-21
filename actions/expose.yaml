@@ -5,7 +5,10 @@ metadata:
 spec:
   baselineType: "NormalAction"
   actionType: "expose"
+  supportedBaselines:
+    - "redis-cluster"
   necessary:
+    handleType: ""
     exposeType: "external" # external、readWrite、readOnly、predixy
     host: ""
     addresses: {}
