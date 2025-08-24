@@ -1,0 +1,450 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareActionBaseline
+metadata:
+  name: redis-cluster-expose-external
+  annotations:
+    alias: "集群外访问"
+spec:
+  baselineType: "NormalAction"
+  actionType: "expose"
+  supportedBaselines:
+    - "redis-cluster"
+  necessary:
+    handleType: "create" # create、delete
+    exposeType: "nodePort" # nodePort、traefik
+    traefikName: ""
+    host: "10.10.102.52" # nodeport主机地址
+    addresses: "" # 不固定，根据baseline提供的渲染
+    busPorts: "" # 不固定，根据baseline提供的渲染
+    protocol: "TCP" # 协议
+  steps:
+    - name: initRollback
+      output:
+        type: "string"
+        expose: false
+      cmd:
+        command:
+          - |
+            # 初始化回滚系统
+            echo "Initializing rollback system..."
+
+            # 创建临时文件来跟踪已创建的资源
+            ROLLBACK_FILE="/tmp/rollback-{{ .Globe.MiddlewareName }}-{{ .Globe.Namespace }}.txt"
+            echo "# Rollback tracking file for {{ .Globe.MiddlewareName }} in {{ .Globe.Namespace }}" > $ROLLBACK_FILE
+            echo "# Created at $(date)" >> $ROLLBACK_FILE
+
+            # 设置回滚函数
+            rollback_all() {
+              echo "=== ROLLBACK TRIGGERED ==="
+              echo "Cleaning up all created resources..."
+              
+              if [ -f "$ROLLBACK_FILE" ]; then
+                while IFS= read -r line; do
+                  # 跳过注释行和空行
+                  if [[ ! "$line" =~ ^#.*$ ]] && [[ -n "$line" ]]; then
+                    echo "Rolling back: $line"
+                    eval "$line"
+                  fi
+                done < "$ROLLBACK_FILE"
+              fi
+              
+              # 清理临时文件
+              rm -f "$ROLLBACK_FILE"
+              echo "Rollback completed"
+              exit 1
+            }
+
+            # 设置错误处理
+            trap rollback_all ERR
+
+            # 添加资源到回滚列表的函数
+            add_to_rollback() {
+              echo "$1" >> "$ROLLBACK_FILE"
+            }
+
+            echo "Rollback system initialized successfully"
+            echo "Rollback file: $ROLLBACK_FILE"
+    - name: getUid
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - "kubectl"
+          - "get"
+          - "rec"
+          - "-n"
+          - "{{ .Globe.Namespace }}"
+          - "{{ .Globe.MiddlewareName }}"
+          - "-o"
+          - "jsonpath='{.metadata.uid}'"
+    - name: createClusterIP
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - |
+            {{- range $index, $value := .Necessary.addresses }}
+            POD_NAME="{{ $.Globe.MiddlewareName | default "redis-cluster" }}-{{ $index }}"
+            NAMESPACE="{{ $.Globe.Namespace | default "default" }}"
+            MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName | default "redis-cluster" }}"
+            UID="{{ $.Step.getUid.output | default "unknown" }}"
+            PROTOCOL="{{ $.Necessary.protocol | default "TCP" }}"
+
+            {{- if eq $.Necessary.handleType "create" }}
+            kubectl apply -f - <<EOF > /dev/null 2>&1
+            {{- else if eq $.Necessary.handleType "delete" }}
+            kubectl delete -f - <<EOF > /dev/null 2>&1
+            {{- end }}
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: ${POD_NAME}-pod
+              namespace: ${NAMESPACE}
+              ownerReferences:
+                - apiVersion: redis.middleware.hc.cn/v1alpha1
+                  blockOwnerDeletion: false
+                  controller: true
+                  kind: RedisCluster
+                  name: ${MIDDLEWARE_NAME}
+                  uid: ${UID}
+            spec:
+              ports:
+                - name: redis
+                  port: 6379
+                  protocol: ${PROTOCOL}
+                  targetPort: 6379
+              selector:
+                app: ${MIDDLEWARE_NAME}
+                component: ${MIDDLEWARE_NAME}
+                middleware: redis
+                statefulset.kubernetes.io/pod-name: ${POD_NAME}
+              type: ClusterIP
+            EOF
+            {{- if eq $.Necessary.handleType "create" }}
+            # 如果创建成功，添加到回滚列表
+            if [ $? -eq 0 ]; then
+              add_to_rollback "kubectl delete svc ${POD_NAME}-pod -n ${NAMESPACE} --ignore-not-found=true"
+              echo "Created internal ClusterIP Service: ${POD_NAME}-pod (added to rollback list)"
+            else
+            {{- end }}
+            {{- end }}
+    - name: createInternalClusterIP
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - |
+            {{- range $index, $value := .Necessary.busPorts }}
+            POD_NAME="{{ $.Globe.MiddlewareName | default "redis-cluster" }}-{{ $index }}"
+            NAMESPACE="{{ $.Globe.Namespace | default "default" }}"
+            MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName | default "redis-cluster" }}"
+            UID="{{ $.Step.getUid.output | default "unknown" }}"
+            PROTOCOL="{{ $.Necessary.protocol | default "TCP" }}"
+            SERVICE_VALUE="{{ $value }}"
+
+            {{- if eq $.Necessary.handleType "create" }}
+            kubectl apply -f - <<EOF > /dev/null 2>&1
+            {{- else if eq $.Necessary.handleType "delete" }}
+            kubectl delete -f - <<EOF > /dev/null 2>&1
+            {{- end }}
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: ${POD_NAME}-pod-16379
+              namespace: ${NAMESPACE}
+              ownerReferences:
+                - apiVersion: redis.middleware.hc.cn/v1alpha1
+                  blockOwnerDeletion: false
+                  controller: true
+                  kind: RedisCluster
+                  name: ${MIDDLEWARE_NAME}
+                  uid: ${UID}
+            spec:
+              ports:
+                - name: redis
+                  port: 16379
+                  protocol: ${PROTOCOL}
+                  targetPort: 16379
+              selector:
+                app: ${MIDDLEWARE_NAME}
+                component: ${MIDDLEWARE_NAME}
+                middleware: redis
+                statefulset.kubernetes.io/pod-name: ${POD_NAME}
+              type: ClusterIP
+            EOF
+
+            {{- if eq $.Necessary.handleType "create" }}
+            # 如果创建成功，添加到回滚列表
+            if [ $? -eq 0 ]; then
+              add_to_rollback "kubectl delete svc ${POD_NAME}-pod-16379 -n ${NAMESPACE} --ignore-not-found=true"
+              echo "Created internal ClusterIP Service: ${POD_NAME}-pod-16379 (added to rollback list)"
+            else
+              echo "Failed to create internal ClusterIP Service: ${POD_NAME}-pod-16379"
+              exit 1
+            fi
+            {{- end }}
+            {{- end }}
+    - name: createNodePort
+      output:
+        type: "string"
+        expose: false
+      cmd:
+        command:
+          - |
+            {{- range $index, $value := .Necessary.addresses }}
+            POD_NAME="{{ $.Globe.MiddlewareName | default "redis-cluster" }}-{{ $index }}"
+            NAMESPACE="{{ $.Globe.Namespace | default "default" }}"
+            MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName | default "redis-cluster" }}"
+            UID="{{ $.Step.getUid.output | default "unknown" }}"
+            PROTOCOL="{{ $.Necessary.protocol | default "TCP" }}"
+            PORT=$(kubectl get svc ${POD_NAME}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[?(@.name=="redis")].port}')
+            TARGET_PORT=$(kubectl get svc ${POD_NAME}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[?(@.name=="redis")].targetPort}')
+
+            {{- if eq $.Necessary.exposeType "nodePort" }}
+            {{- if eq $.Necessary.handleType "create" }}
+            kubectl apply -f - <<EOF > /dev/null 2>&1
+            {{- else if eq $.Necessary.handleType "delete" }}
+            kubectl delete -f - <<EOF > /dev/null 2>&1
+            {{- end }}
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: ${POD_NAME}-pod-nodeport
+              namespace: ${NAMESPACE}
+              ownerReferences:
+                - apiVersion: redis.middleware.hc.cn/v1alpha1
+                  blockOwnerDeletion: false
+                  controller: true
+                  kind: RedisCluster
+                  name: ${MIDDLEWARE_NAME}
+                  uid: ${UID}
+            spec:
+              ports:
+                - name: redis
+                  port: ${PORT}
+                  protocol: ${PROTOCOL}
+                  targetPort: ${TARGET_PORT}
+                  nodePort: {{ $value }}
+              selector:
+                app: ${MIDDLEWARE_NAME}
+                component: ${MIDDLEWARE_NAME}
+                middleware: redis
+                statefulset.kubernetes.io/pod-name: ${POD_NAME}
+              type: NodePort
+            EOF
+
+            {{- if eq $.Necessary.handleType "create" }}
+            # 如果创建成功，添加到回滚列表
+            if [ $? -eq 0 ]; then
+              add_to_rollback "kubectl delete svc ${POD_NAME}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
+              echo "Created NodePort Service: ${POD_NAME}-pod-nodeport (added to rollback list)"
+            else
+              echo "Failed to create NodePort Service: ${POD_NAME}-pod-nodeport"
+              exit 1
+            fi
+            {{- end }}
+            {{- end }}
+            {{- if eq $.Necessary.exposeType "traefik" }}
+            {{- if eq $.Necessary.handleType "create" }}
+            kubectl apply -f - <<EOF > /dev/null 2>&1
+            {{- else if eq $.Necessary.handleType "delete" }}
+            kubectl delete -f - <<EOF > /dev/null 2>&1
+            {{- end }}
+            apiVersion: traefik.containo.us/v1alpha1
+            kind: IngressRouteTCP
+            metadata:
+              annotations:
+                kubernetes.io/ingress.class: {{ $.Necessary.traefikName }}
+              name: ${POD_NAME}-pod-nodeport
+              namespace: ${NAMESPACE}
+            spec:
+            entryPoints:
+            - {{ $.Necessary.traefikName }}-p{{ $value }}
+            routes:
+            - match: HostSNI ('*')
+            services:
+            - name: ${POD_NAME}-pod
+            port: ${PORT}
+            EOF
+
+            {{- if eq $.Necessary.handleType "create" }}
+            # 如果创建成功，添加到回滚列表
+            if [ $? -eq 0 ]; then
+              add_to_rollback "kubectl delete ingressroutetcp ${POD_NAME}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
+              echo "Created Traefik IngressRouteTCP: ${POD_NAME}-pod-nodeport (added to rollback list)"
+            else
+              echo "Failed to create Traefik IngressRouteTCP: ${POD_NAME}-pod-nodeport"
+              exit 1
+            fi
+            {{- end }}
+            {{- end }}
+            {{- end }}
+    - name: createInternalNodePort
+      output:
+        type: "string"
+        expose: false
+      cmd:
+        command:
+          - |
+            {{- range $index, $value := .Necessary.busPorts }}
+            POD_NAME="{{ $.Globe.MiddlewareName | default "redis-cluster" }}-{{ $index }}"
+            NAMESPACE="{{ $.Globe.Namespace | default "default" }}"
+            MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName | default "redis-cluster" }}"
+            UID="{{ $.Step.getUid.output | default "unknown" }}"
+            PROTOCOL="{{ $.Necessary.protocol | default "TCP" }}"
+            PORT=$(kubectl get svc ${POD_NAME}-pod-16379 -n ${NAMESPACE} -o jsonpath='{.spec.ports[?(@.name=="redis")].port}')
+            TARGET_PORT=$(kubectl get svc ${POD_NAME}-pod-16379 -n ${NAMESPACE} -o jsonpath='{.spec.ports[?(@.name=="redis")].targetPort}')
+
+            {{- if eq $.Necessary.exposeType "nodePort" }}
+            {{- if eq $.Necessary.handleType "create" }}
+            kubectl apply -f - <<EOF > /dev/null 2>&1
+            {{- else if $.Necessary.handleType "delete" }}
+            kubectl delete -f - <<EOF > /dev/null 2>&1
+            {{- end }}
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: ${POD_NAME}-pod-16379-nodeport
+              namespace: ${NAMESPACE}
+              ownerReferences:
+                - apiVersion: redis.middleware.hc.cn/v1alpha1
+                  blockOwnerDeletion: false
+                  controller: true
+                  kind: RedisCluster
+                  name: ${MIDDLEWARE_NAME}
+                  uid: ${UID}
+            spec:
+              ports:
+                - name: redis
+                  port: ${PORT}
+                  protocol: ${PROTOCOL}
+                  targetPort: ${TARGET_PORT}
+                  nodePort: {{ $value }}
+              selector:
+                app: ${MIDDLEWARE_NAME}
+                component: ${MIDDLEWARE_NAME}
+                middleware: redis
+                statefulset.kubernetes.io/pod-name: ${POD_NAME}
+              type: NodePort
+            EOF
+
+            {{- if eq $.Necessary.handleType "create" }}
+            # 如果创建成功，添加到回滚列表
+            if [ $? -eq 0 ]; then
+              add_to_rollback "kubectl delete svc ${POD_NAME}-pod-16379-nodeport -n ${NAMESPACE} --ignore-not-found=true"
+              echo "Created internal NodePort Service: ${POD_NAME}-pod-16379-nodeport (added to rollback list)"
+            else
+              echo "Failed to create internal NodePort Service: ${POD_NAME}-pod-16379-nodeport"
+              exit 1
+            fi
+            {{- end }}
+            {{- end }}
+            {{- if eq $.Necessary.exposeType "traefik" }}
+            {{- if eq $.Necessary.handleType "create" }}
+            kubectl apply -f - <<EOF > /dev/null 2>&1
+            {{- else if $.Necessary.handleType "delete" }}
+            kubectl delete -f - <<EOF > /dev/null 2>&1
+            {{- end }}
+            apiVersion: traefik.containo.us/v1alpha1
+            kind: IngressRouteTCP
+            metadata:
+              annotations:
+                kubernetes.io/ingress.class: {{ $.Necessary.traefikName }}
+              name: ${POD_NAME}-pod-16379-nodeport
+              namespace: ${NAMESPACE}
+            spec:
+            entryPoints:
+            - {{ $.Necessary.traefikName }}-p{{ $value }}
+            routes:
+            - match: HostSNI ('*')
+            services:
+            - name: ${POD_NAME}-pod-16379
+            port: ${PORT}
+            EOF
+            {{- if eq $.Necessary.handleType "create" }}
+            # 如果创建成功，添加到回滚列表
+            if [ $? -eq 0 ]; then
+              add_to_rollback "kubectl delete ingressroutetcp ${POD_NAME}-pod-16379-nodeport -n ${NAMESPACE} --ignore-not-found=true"
+              echo "Created internal Traefik IngressRouteTCP: ${POD_NAME}-pod-16379-nodeport (added to rollback list)"
+            else
+              echo "Failed to create internal Traefik IngressRouteTCP: ${POD_NAME}-pod-16379-nodeport"
+              exit 1
+            fi
+            {{- end }}
+            {{- end }}
+            {{- end }}
+    - name: cleanupRollback
+      output:
+        type: "string"
+        expose: false
+      cmd:
+        command:
+          - |
+            # 所有步骤成功完成，清理回滚文件
+            ROLLBACK_FILE="/tmp/rollback-{{ .Globe.MiddlewareName }}-{{ .Globe.Namespace }}.txt"
+
+            if [ -f "$ROLLBACK_FILE" ]; then
+              echo "All operations completed successfully. Cleaning up rollback file..."
+              rm -f "$ROLLBACK_FILE"
+              echo "Rollback file cleaned up: $ROLLBACK_FILE"
+            else
+              echo "No rollback file found to clean up"
+            fi
+
+            echo "Operation completed successfully!"
+    - name: updateMiddleware
+      cmd:
+        command:
+          - "kubectl"
+          - "annotate"
+          - "mid"
+          - "{{ .Globe.MiddlewareName }}"
+          - "-n"
+          - "{{ .Globe.Namespace }}"
+          - '''middleware.cn/exposeNecessary{{ if eq .Necessary.handleType "create" }}={{ b64enc (toJson .Necessary) }}{{ else if eq .Necessary.handleType "delete" }}-{{ end }}'''
+    - name: updateCluster
+      type: "KubectlEdit" # KubectlGet、KubectlEdit、KubectlExec、Exec、HTTP
+      cue: |
+        output: {
+          spec: parameters.spec
+        }
+        parameters: {
+          spec: {
+            parameters: {
+              pod: [
+                {
+                  externalAccess: {
+                    {{- if eq .Necessary.handleType "create" }}
+                    enabled: true
+                    {{- else if eq .Necessary.handleType "delete" }}
+                    enabled: false
+                    {{- end }}
+                    addresses: {
+                      {{- if eq .Necessary.handleType "create" }}
+                      {{- range $index, $value := .Necessary.addresses }}
+                      "{{ $.Globe.MiddlewareName }}-{{ $index }}": "{{ $.Necessary.host }}:{{ $value }}"
+                      {{- end }}
+                      {{- end }}
+                    }
+                    busPorts: {
+                      {{- if eq .Necessary.handleType "create" }}
+                      {{- range $index, $value := .Necessary.busPorts }}
+                      "{{ $.Globe.MiddlewareName }}-{{ $index }}": {{ $value }}
+                      {{- end }}
+                      {{- end }}
+                    }
+                  }
+                },
+              ]
+            }
+          }
+          resource: {
+            apiversion: "middleware.cn/v1"
+            kind: "Middleware"
+            name: "{{ .Globe.MiddlewareName }}"
+            namespace: "{{ .Globe.Namespace }}"
+          }
+        }
