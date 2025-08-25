@@ -15,7 +15,7 @@ spec:
     traefikName: ""
     host: "10.10.102.52" # nodeport主机地址
     ports: "" # 不固定，根据baseline提供的渲染
-    busPorts: "" # 不固定，根据baseline提供的渲染
+    sentinelPorts: "" # 不固定，根据baseline提供的渲染
     protocol: "TCP" # 协议
   steps:
     - name: initRollback
@@ -177,7 +177,7 @@ spec:
       cmd:
         command:
           - |
-            {{- range $index, $value := .Necessary.busPorts }}
+            {{- range $index, $value := .Necessary.sentinelPorts }}
             NAMESPACE="{{ $.Globe.Namespace }}"
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
             CLUSTER_UID="{{ $.Step.getUid.output }}"
@@ -322,7 +322,7 @@ spec:
                     }
                     sentinelAddresses: {
                       {{- if eq .Necessary.handleType "create" }}
-                      {{- range $index, $value := .Necessary.busPorts }}
+                      {{- range $index, $value := .Necessary.sentinelPorts }}
                       "{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}": {{ $value }}
                       {{- end }}
                       {{- end }}
