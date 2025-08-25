@@ -14,28 +14,28 @@ spec:
     gvkName: v1alpha1
   necessary:
     repository: ""
-    version: "7.2.8"
-    password: ""
+    version: '{"type":"version","label":"版本","required":true,"default":"7.2.8"}'
+    password: '{"type":"password","label":"管理员账号密码","required":true,"description":"MySQL 管理员的初始密码，需包含大小写字母、数字和特殊字符","pattern":"^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$","placeholder":"输入管理员账户密码","default":"Hc@Cloud01"}'
     resource:
       redis:
         limits:
-          cpu: ""
-          memory: ""
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"请输入自定义配额,单位为Core","placeholder":"请输入自定义配额,单位为Core","default":"1"}'
+          memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
         requests:
-          cpu: ""
-          memory: ""
-        replicas: "2"
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"请输入自定义配额,单位为Core","placeholder":"请输入自定义配额,单位为Core","default":"1"}'
+          memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
+        replicas: '{"type":"int","label":"实例数","required":true,"description":"节点数量","default":2,"pattern":"^[1-9]\\d*$","placeholder":"请输入实例数"}'
         volume:
-          size: ""
-          storageClass: ""
+          size: '{"type":"int","label":"存储大小","required":true,"description":"请输入存储大小","pattern":"^[1-9]\\d*$","placeholder":"请输入存储大小"}'
+          storageClass: '{"type":"storageClass","label":"存储类","required":true,"description":"请选择存储","placeholder":"请选择存储"}'
       sentinel:
         limits:
-          cpu: ""
-          memory: ""
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"请输入自定义配额,单位为Core","placeholder":"请输入自定义配额,单位为Core","default":"1"}'
+          memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
         requests:
-          cpu: ""
-          memory: ""
-        replicas: "1"
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"请输入自定义配额,单位为Core","placeholder":"请输入自定义配额,单位为Core","default":"1"}'
+          memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
+        replicas: '{"type":"int","label":"实例数","required":true,"description":"节点数量","default":1,"pattern":"^[1-9]\\d*$","placeholder":"请输入实例数"}'
   preActions:
     - name: pre-redis-alertrule-labels
       parameters:
