@@ -1,14 +1,14 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareActionBaseline
 metadata:
-  name: redis-cluster-expose-external
+  name: redis-sentinel-expose-external
   annotations:
     alias: "集群外访问"
 spec:
   baselineType: "NormalAction"
   actionType: "expose"
   supportedBaselines:
-    - "redis-cluster"
+    - "redis-sentinel"
   necessary:
     handleType: "create" # create、delete
     exposeType: "nodePort" # nodePort、traefik
@@ -78,115 +78,6 @@ spec:
           - "{{ .Globe.MiddlewareName }}"
           - "-o"
           - "jsonpath='{.metadata.uid}'"
-    - name: createClusterIP
-      output:
-        type: "string"
-        expose: true
-      cmd:
-        command:
-          - |
-            {{- range $index, $value := .Necessary.addresses }}
-            POD_NAME="{{ $.Globe.MiddlewareName }}-{{ $index }}"
-            NAMESPACE="{{ $.Globe.Namespace }}"
-            MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
-            CLUSTER_UID="{{ $.Step.getUid.output }}"
-            PROTOCOL="{{ $.Necessary.protocol }}"
-
-            {{- if eq $.Necessary.handleType "create" }}
-            kubectl apply -f - <<EOF > /dev/null 2>&1
-            {{- else if eq $.Necessary.handleType "delete" }}
-            kubectl delete -f - <<EOF > /dev/null 2>&1
-            {{- end }}
-            apiVersion: v1
-            kind: Service
-            metadata:
-              name: ${POD_NAME}-pod
-              namespace: ${NAMESPACE}
-              ownerReferences:
-                - apiVersion: redis.middleware.hc.cn/v1alpha1
-                  blockOwnerDeletion: false
-                  controller: true
-                  kind: RedisCluster
-                  name: ${MIDDLEWARE_NAME}
-                  uid: ${CLUSTER_UID}
-            spec:
-              ports:
-                - name: redis
-                  port: 6379
-                  protocol: ${PROTOCOL}
-                  targetPort: 6379
-              selector:
-                app: ${MIDDLEWARE_NAME}
-                component: ${MIDDLEWARE_NAME}
-                middleware: redis
-                statefulset.kubernetes.io/pod-name: ${POD_NAME}
-              type: ClusterIP
-            EOF
-            {{- if eq $.Necessary.handleType "create" }}
-            # 如果创建成功，添加到回滚列表
-            if [ $? -eq 0 ]; then
-              add_to_rollback "kubectl delete svc ${POD_NAME}-pod -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created internal ClusterIP Service: ${POD_NAME}-pod (added to rollback list)"
-            else
-            {{- end }}
-            {{- end }}
-    - name: createInternalClusterIP
-      output:
-        type: "string"
-        expose: true
-      cmd:
-        command:
-          - |
-            {{- range $index, $value := .Necessary.busPorts }}
-            POD_NAME="{{ $.Globe.MiddlewareName }}-{{ $index }}"
-            NAMESPACE="{{ $.Globe.Namespace }}"
-            MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
-            CLUSTER_UID="{{ $.Step.getUid.output }}"
-            PROTOCOL="{{ $.Necessary.protocol }}"
-            SERVICE_VALUE="{{ $value }}"
-
-            {{- if eq $.Necessary.handleType "create" }}
-            kubectl apply -f - <<EOF > /dev/null 2>&1
-            {{- else if eq $.Necessary.handleType "delete" }}
-            kubectl delete -f - <<EOF > /dev/null 2>&1
-            {{- end }}
-            apiVersion: v1
-            kind: Service
-            metadata:
-              name: ${POD_NAME}-pod-16379
-              namespace: ${NAMESPACE}
-              ownerReferences:
-                - apiVersion: redis.middleware.hc.cn/v1alpha1
-                  blockOwnerDeletion: false
-                  controller: true
-                  kind: RedisCluster
-                  name: ${MIDDLEWARE_NAME}
-                  uid: ${CLUSTER_UID}
-            spec:
-              ports:
-                - name: redis
-                  port: 16379
-                  protocol: ${PROTOCOL}
-                  targetPort: 16379
-              selector:
-                app: ${MIDDLEWARE_NAME}
-                component: ${MIDDLEWARE_NAME}
-                middleware: redis
-                statefulset.kubernetes.io/pod-name: ${POD_NAME}
-              type: ClusterIP
-            EOF
-
-            {{- if eq $.Necessary.handleType "create" }}
-            # 如果创建成功，添加到回滚列表
-            if [ $? -eq 0 ]; then
-              add_to_rollback "kubectl delete svc ${POD_NAME}-pod-16379 -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created internal ClusterIP Service: ${POD_NAME}-pod-16379 (added to rollback list)"
-            else
-              echo "Failed to create internal ClusterIP Service: ${POD_NAME}-pod-16379"
-              exit 1
-            fi
-            {{- end }}
-            {{- end }}
     - name: createNodePort
       output:
         type: "string"
@@ -195,13 +86,13 @@ spec:
         command:
           - |
             {{- range $index, $value := .Necessary.addresses }}
-            POD_NAME="{{ $.Globe.MiddlewareName }}-{{ $index }}"
             NAMESPACE="{{ $.Globe.Namespace }}"
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
             CLUSTER_UID="{{ $.Step.getUid.output }}"
             PROTOCOL="{{ $.Necessary.protocol }}"
-            PORT=$(kubectl get svc ${POD_NAME}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].port}')
-            TARGET_PORT=$(kubectl get svc ${POD_NAME}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
+            PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].port}')
+            TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
+            SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
 
             {{- if eq $.Necessary.exposeType "nodePort" }}
             {{- if eq $.Necessary.handleType "create" }}
@@ -212,7 +103,7 @@ spec:
             apiVersion: v1
             kind: Service
             metadata:
-              name: ${POD_NAME}-pod-nodeport
+              name: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport
               namespace: ${NAMESPACE}
               ownerReferences:
                 - apiVersion: redis.middleware.hc.cn/v1alpha1
@@ -223,26 +114,23 @@ spec:
                   uid: ${CLUSTER_UID}
             spec:
               ports:
-                - name: redis
+                - name: {{ $.Globe.MiddlewareName }}
                   port: ${PORT}
                   protocol: ${PROTOCOL}
                   targetPort: ${TARGET_PORT}
                   nodePort: {{ $value }}
               selector:
-                app: ${MIDDLEWARE_NAME}
-                component: ${MIDDLEWARE_NAME}
-                middleware: redis
-                statefulset.kubernetes.io/pod-name: ${POD_NAME}
+            ${SELECTOR_YAML}
               type: NodePort
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
             # 如果创建成功，添加到回滚列表
             if [ $? -eq 0 ]; then
-              add_to_rollback "kubectl delete svc ${POD_NAME}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created NodePort Service: ${POD_NAME}-pod-nodeport (added to rollback list)"
+              add_to_rollback "kubectl delete svc {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
+              echo "Created NodePort Service: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport (added to rollback list)"
             else
-              echo "Failed to create NodePort Service: ${POD_NAME}-pod-nodeport"
+              echo "Failed to create NodePort Service: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport"
               exit 1
             fi
             {{- end }}
@@ -258,7 +146,7 @@ spec:
             metadata:
               annotations:
                 kubernetes.io/ingress.class: {{ $.Necessary.traefikName }}
-              name: ${POD_NAME}-pod-nodeport
+              name: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport
               namespace: ${NAMESPACE}
             spec:
             entryPoints:
@@ -266,23 +154,23 @@ spec:
             routes:
             - match: HostSNI ('*')
             services:
-            - name: ${POD_NAME}-pod
+            - name: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod
             port: ${PORT}
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
             # 如果创建成功，添加到回滚列表
             if [ $? -eq 0 ]; then
-              add_to_rollback "kubectl delete ingressroutetcp ${POD_NAME}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created Traefik IngressRouteTCP: ${POD_NAME}-pod-nodeport (added to rollback list)"
+              add_to_rollback "kubectl delete ingressroutetcp {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
+              echo "Created Traefik IngressRouteTCP: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport (added to rollback list)"
             else
-              echo "Failed to create Traefik IngressRouteTCP: ${POD_NAME}-pod-nodeport"
+              echo "Failed to create Traefik IngressRouteTCP: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport"
               exit 1
             fi
             {{- end }}
             {{- end }}
             {{- end }}
-    - name: createInternalNodePort
+    - name: createSentinelNodePort
       output:
         type: "string"
         expose: false
@@ -290,13 +178,13 @@ spec:
         command:
           - |
             {{- range $index, $value := .Necessary.busPorts }}
-            POD_NAME="{{ $.Globe.MiddlewareName }}-{{ $index }}"
             NAMESPACE="{{ $.Globe.Namespace }}"
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
             CLUSTER_UID="{{ $.Step.getUid.output }}"
             PROTOCOL="{{ $.Necessary.protocol }}"
-            PORT=$(kubectl get svc ${POD_NAME}-pod-16379 -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].port}')
-            TARGET_PORT=$(kubectl get svc ${POD_NAME}-pod-16379 -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
+            PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].port}')
+            TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
+            SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
 
             {{- if eq $.Necessary.exposeType "nodePort" }}
             {{- if eq $.Necessary.handleType "create" }}
@@ -307,7 +195,7 @@ spec:
             apiVersion: v1
             kind: Service
             metadata:
-              name: ${POD_NAME}-pod-16379-nodeport
+              name: {{ $.Globe.MiddlewareName }}-sentinel-nodeport
               namespace: ${NAMESPACE}
               ownerReferences:
                 - apiVersion: redis.middleware.hc.cn/v1alpha1
@@ -318,26 +206,23 @@ spec:
                   uid: ${CLUSTER_UID}
             spec:
               ports:
-                - name: redis
+                - name: {{ $.Globe.MiddlewareName }}
                   port: ${PORT}
                   protocol: ${PROTOCOL}
                   targetPort: ${TARGET_PORT}
                   nodePort: {{ $value }}
               selector:
-                app: ${MIDDLEWARE_NAME}
-                component: ${MIDDLEWARE_NAME}
-                middleware: redis
-                statefulset.kubernetes.io/pod-name: ${POD_NAME}
+            ${SELECTOR_YAML}
               type: NodePort
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
             # 如果创建成功，添加到回滚列表
             if [ $? -eq 0 ]; then
-              add_to_rollback "kubectl delete svc ${POD_NAME}-pod-16379-nodeport -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created internal NodePort Service: ${POD_NAME}-pod-16379-nodeport (added to rollback list)"
+              add_to_rollback "kubectl delete svc {{ $.Globe.MiddlewareName }}-sentinel-nodeport -n ${NAMESPACE} --ignore-not-found=true"
+              echo "Created internal NodePort Service: {{ $.Globe.MiddlewareName }}-sentinel-nodeport (added to rollback list)"
             else
-              echo "Failed to create internal NodePort Service: ${POD_NAME}-pod-16379-nodeport"
+              echo "Failed to create internal NodePort Service: {{ $.Globe.MiddlewareName }}-sentinel-nodeport"
               exit 1
             fi
             {{- end }}
@@ -353,7 +238,7 @@ spec:
             metadata:
               annotations:
                 kubernetes.io/ingress.class: {{ $.Necessary.traefikName }}
-              name: ${POD_NAME}-pod-16379-nodeport
+              name: {{ $.Globe.MiddlewareName }}-sentinel-nodeport
               namespace: ${NAMESPACE}
             spec:
             entryPoints:
@@ -361,16 +246,16 @@ spec:
             routes:
             - match: HostSNI ('*')
             services:
-            - name: ${POD_NAME}-pod-16379
+            - name: {{ $.Globe.MiddlewareName }}-sentinel
             port: ${PORT}
             EOF
             {{- if eq $.Necessary.handleType "create" }}
             # 如果创建成功，添加到回滚列表
             if [ $? -eq 0 ]; then
-              add_to_rollback "kubectl delete ingressroutetcp ${POD_NAME}-pod-16379-nodeport -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created internal Traefik IngressRouteTCP: ${POD_NAME}-pod-16379-nodeport (added to rollback list)"
+              add_to_rollback "kubectl delete ingressroutetcp {{ $.Globe.MiddlewareName }}-sentinel-nodeport -n ${NAMESPACE} --ignore-not-found=true"
+              echo "Created internal Traefik IngressRouteTCP: {{ $.Globe.MiddlewareName }}-sentinel-nodeport (added to rollback list)"
             else
-              echo "Failed to create internal Traefik IngressRouteTCP: ${POD_NAME}-pod-16379-nodeport"
+              echo "Failed to create internal Traefik IngressRouteTCP: {{ $.Globe.MiddlewareName }}-sentinel-nodeport"
               exit 1
             fi
             {{- end }}
@@ -405,9 +290,9 @@ spec:
             fi
 
             {{- if eq .Necessary.handleType "create" }}
-            NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-cluster-expose-external" = {{ toJson .Necessary }}')
+            NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-sentinel-expose-external" = {{ toJson .Necessary }}')
             {{- else if eq .Necessary.handleType "delete" }}
-            NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-cluster-expose-external" = null')
+            NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-sentinel-expose-external" = null')
             {{- end }}
             NECESSARY_JSON_BASE64=$(echo $NECESSARY_JSON | base64 -w 0)
             kubectl annotate mid {{ .Globe.MiddlewareName }} middleware.cn/exposeNecessary=$NECESSARY_JSON_BASE64 -n {{ .Globe.Namespace }}
@@ -431,14 +316,14 @@ spec:
                     addresses: {
                       {{- if eq .Necessary.handleType "create" }}
                       {{- range $index, $value := .Necessary.addresses }}
-                      "{{ $.Globe.MiddlewareName }}-{{ $index }}": "{{ $.Necessary.host }}:{{ $value }}"
+                      "{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}": "{{ $.Necessary.host }}:{{ $value }}"
                       {{- end }}
                       {{- end }}
                     }
-                    busPorts: {
+                    sentinelAddresses: {
                       {{- if eq .Necessary.handleType "create" }}
                       {{- range $index, $value := .Necessary.busPorts }}
-                      "{{ $.Globe.MiddlewareName }}-{{ $index }}": {{ $value }}
+                      "{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}": {{ $value }}
                       {{- end }}
                       {{- end }}
                     }

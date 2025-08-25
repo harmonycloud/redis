@@ -191,11 +191,17 @@ spec:
     - name: updateMiddleware
       cmd:
         command:
-          - "kubectl"
-          - "annotate"
-          - "mid"
-          - "{{ .Globe.MiddlewareName }}"
-          - "-n"
-          - "{{ .Globe.Namespace }}"
-          - '{{ if or (eq .Necessary.handleType "create") (eq .Necessary.handleType "update") }}--overwrite{{ end }}'
-          - '''middleware.cn/exposeNecessary{{ if or (eq .Necessary.handleType "create") (eq .Necessary.handleType "update") }}={{ b64enc (toJson .Necessary) }}{{ else if eq .Necessary.handleType "delete" }}-{{ end }}'''
+          - |
+            NECESSARY_JSON=$(kubectl get mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} -o jsonpath='{.metadata.annotations.middleware\.cn/exposeNecessary}' | base64 -d)
+            if [ -z "$NECESSARY_JSON" ]; then
+              NECESSARY_JSON='{}'
+            fi
+
+            {{- if or (eq .Necessary.handleType "create") (eq .Necessary.handleType "update") }}
+            NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-sentinel-expose-readonly" = {{ toJson .Necessary }}')
+            {{- else if eq .Necessary.handleType "delete" }}
+            NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-sentinel-expose-readonly" = null')
+            {{- end }}
+            NECESSARY_JSON_BASE64=$(echo $NECESSARY_JSON | base64 -w 0)
+            kubectl annotate mid {{ .Globe.MiddlewareName }} middleware.cn/exposeNecessary=$NECESSARY_JSON_BASE64 -n {{ .Globe.Namespace }}
+
