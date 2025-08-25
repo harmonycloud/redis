@@ -13,7 +13,6 @@ spec:
     handleType: "create" # create、update、delete
     exposeType: "nodePort" # nodePort、traefik
     traefikName: ""
-    host: "10.10.102.52" # nodeport主机地址
     ports: "" # 不固定，根据baseline提供的渲染
     protocol: "TCP" # 协议
   steps:
