@@ -14,7 +14,7 @@ spec:
     exposeType: "nodePort" # nodePort、traefik
     traefikName: ""
     host: "10.10.102.52" # nodeport主机地址
-    addresses: "" # 不固定，根据baseline提供的渲染
+    ports: "" # 不固定，根据baseline提供的渲染
     busPorts: "" # 不固定，根据baseline提供的渲染
     protocol: "TCP" # 协议
   steps:
@@ -85,7 +85,7 @@ spec:
       cmd:
         command:
           - |
-            {{- range $index, $value := .Necessary.addresses }}
+            {{- range $index, $value := .Necessary.ports }}
             NAMESPACE="{{ $.Globe.Namespace }}"
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
             CLUSTER_UID="{{ $.Step.getUid.output }}"
@@ -315,7 +315,7 @@ spec:
                     {{- end }}
                     addresses: {
                       {{- if eq .Necessary.handleType "create" }}
-                      {{- range $index, $value := .Necessary.addresses }}
+                      {{- range $index, $value := .Necessary.ports }}
                       "{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}": "{{ $.Necessary.host }}:{{ $value }}"
                       {{- end }}
                       {{- end }}

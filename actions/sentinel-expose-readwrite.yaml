@@ -14,7 +14,7 @@ spec:
     exposeType: "nodePort" # nodePort、traefik
     traefikName: ""
     host: "10.10.102.52" # nodeport主机地址
-    readwrite: "" # 不固定，根据baseline提供的渲染
+    ports: "" # 不固定，根据baseline提供的渲染
     protocol: "TCP" # 协议
   steps:
     - name: initRollback
@@ -84,7 +84,7 @@ spec:
       cmd:
         command:
           - |
-            {{- range $index, $value := .Necessary.readwrite }}
+            {{- range $index, $value := .Necessary.ports }}
             NAMESPACE="{{ $.Globe.Namespace }}"
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
             CLUSTER_UID="{{ $.Step.getUid.output }}"
