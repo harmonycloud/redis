@@ -11,11 +11,11 @@ spec:
     - "redis-sentinel-proxy"
     - "redis-cluster-proxy"
   necessary:
-    handleType: "create" # create、update、delete
-    exposeType: "nodePort" # nodePort、traefik
-    traefikName: ""
-    ports: "" # 不固定，根据baseline提供的渲染
-    protocol: "TCP" # 协议
+    handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,delete"}' # create、delete
+    exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"nodePort,traefik"}' # nodePort、traefik
+    traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true}'
+    ports: '{"type":"expose","label":"ports","required":true,"size":"1"}'# 不固定，根据baseline提供的渲染
+    protocol: '{"type":"enum","label":"协议","required":true,"options":"TCP"}' # 协议
   steps:
     - name: initRollback
       output:

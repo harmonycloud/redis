@@ -10,13 +10,13 @@ spec:
   supportedBaselines:
     - "redis-cluster"
   necessary:
-    handleType: "create" # create、delete
-    exposeType: "nodePort" # nodePort、traefik
-    traefikName: ""
-    host: "10.10.102.52" # nodeport主机地址
-    ports: "" # 不固定，根据baseline提供的渲染
-    busPorts: "" # 不固定，根据baseline提供的渲染
-    protocol: "TCP" # 协议
+    handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,delete"}' # create、delete
+    exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"nodePort,traefik"}' # nodePort、traefik
+    traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true}'
+    host: '{"type":"string","label":"负载均衡地址","required":true}' # nodeport主机地址
+    ports: '{"type":"expose","label":"ports","required":true,"ref":"master*1,slave*1,","size":"1"}'# 不固定，根据baseline提供的渲染
+    busPorts: '{"type":"expose","label":"ports","required":true,"ref":"master*1,slave*1,","size":"1"}'# 不固定，根据baseline提供的渲染
+    protocol: '{"type":"enum","label":"协议","required":true,"options":"TCP"}' # 协议
   steps:
     - name: initRollback
       output:
