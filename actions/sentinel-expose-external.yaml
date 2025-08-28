@@ -25,17 +25,30 @@ spec:
       cmd:
         command:
           - |
+            # 创建回滚脚本文件，包含所有回滚相关的函数
+            cat > /tmp/rollback-functions.sh << 'ROLLBACK_EOF'
             #!/bin/bash
+            
+            # 回滚文件路径
+            ROLLBACK_FILE="/tmp/rollback-{{ .Globe.MiddlewareName }}-{{ .Globe.Namespace }}.txt"
+            
             # 初始化回滚系统
-            echo "Initializing rollback system..."
+            init_rollback() {
+              echo "Initializing rollback system..."
+              echo "# Rollback tracking file for {{ .Globe.MiddlewareName }} in {{ .Globe.Namespace }}" > "$ROLLBACK_FILE"
+              echo "# Created at $(date)" >> "$ROLLBACK_FILE"
+              echo "Rollback system initialized successfully"
+              echo "Rollback file: $ROLLBACK_FILE"
+            }
             
-            # 创建临时文件来跟踪已创建的资源
-            ROLLBACK_FILE="/tmp/rollback-xxx-middleware.txt"
-            echo "# Rollback tracking file for xxx in middleware" > "$ROLLBACK_FILE"
-            echo "# Created at $(date)" >> "$ROLLBACK_FILE"
+            # 添加资源到回滚列表的函数
+            add_to_rollback() {
+              echo "$1" >> "$ROLLBACK_FILE"
+              echo "Added to rollback: $1"
+            }
             
-            # 设置回滚函数
-            rollback_all() {
+            # 执行回滚
+            execute_rollback() {
               echo "=== ROLLBACK TRIGGERED ==="
               echo "Cleaning up all created resources..."
               
@@ -49,20 +62,27 @@ spec:
                 done < "$ROLLBACK_FILE"
               fi
               
-              # 清理临时文件
-              rm -f "$ROLLBACK_FILE"
               echo "Rollback completed"
-              exit 1
+              rm -f "$ROLLBACK_FILE"
             }
             
-            # 兼容性更好的错误处理设置
-            set -e  # 遇到错误立即退出
-            trap rollback_all EXIT  # 使用 EXIT 而不是 ERR
-            
-            # 添加资源到回滚列表的函数
-            add_to_rollback() {
-              echo "$1" >> "$ROLLBACK_FILE"
+            # 清理回滚文件（成功时）
+            cleanup_rollback() {
+              echo "Script completed successfully, cleaning up rollback file"
+              rm -f "$ROLLBACK_FILE"
             }
+            ROLLBACK_EOF
+            
+            # 设置执行权限
+            chmod +x /tmp/rollback-functions.sh
+            
+            # 初始化回滚系统
+            source /tmp/rollback-functions.sh
+            init_rollback
+            
+            # 设置错误处理和回滚trap
+            set -e
+            trap execute_rollback EXIT
             
             echo "Rollback system initialized successfully"
             echo "Rollback file: $ROLLBACK_FILE"
@@ -87,6 +107,9 @@ spec:
       cmd:
         command:
           - |
+            # 加载回滚函数
+            source /tmp/rollback-functions.sh
+            
             {{- range $index, $value := .Necessary.ports }}
             POD_NAME="{{ $.Globe.MiddlewareName }}-{{ $index }}"
             NAMESPACE="{{ $.Globe.Namespace }}"
@@ -130,6 +153,9 @@ spec:
               add_to_rollback "kubectl delete svc ${POD_NAME}-pod -n ${NAMESPACE} --ignore-not-found=true"
               echo "Created internal ClusterIP Service: ${POD_NAME}-pod (added to rollback list)"
             else
+              echo "Failed to create ClusterIP Service: ${POD_NAME}-pod"
+              exit 1
+            fi
             {{- end }}
             {{- end }}
     - name: createNodePort
@@ -139,6 +165,9 @@ spec:
       cmd:
         command:
           - |
+            # 加载回滚函数
+            source /tmp/rollback-functions.sh
+            
             {{- range $index, $value := .Necessary.ports }}
             NAMESPACE="{{ $.Globe.Namespace }}"
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
@@ -231,6 +260,9 @@ spec:
       cmd:
         command:
           - |
+            # 加载回滚函数
+            source /tmp/rollback-functions.sh
+            
             {{- range $index, $value := .Necessary.sentinelPorts }}
             NAMESPACE="{{ $.Globe.Namespace }}"
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
@@ -243,7 +275,7 @@ spec:
             {{- if eq $.Necessary.exposeType "nodePort" }}
             {{- if eq $.Necessary.handleType "create" }}
             kubectl apply -f - <<EOF > /dev/null 2>&1
-            {{- else if $.Necessary.handleType "delete" }}
+            {{- else if eq $.Necessary.handleType "delete" }}
             kubectl delete -f - <<EOF > /dev/null 2>&1
             {{- end }}
             apiVersion: v1
@@ -284,7 +316,7 @@ spec:
             {{- if eq $.Necessary.exposeType "traefik" }}
             {{- if eq $.Necessary.handleType "create" }}
             kubectl apply -f - <<EOF > /dev/null 2>&1
-            {{- else if $.Necessary.handleType "delete" }}
+            {{- else if eq $.Necessary.handleType "delete" }}
             kubectl delete -f - <<EOF > /dev/null 2>&1
             {{- end }}
             apiVersion: traefik.containo.us/v1alpha1
@@ -322,17 +354,11 @@ spec:
       cmd:
         command:
           - |
+            # 加载回滚函数
+            source /tmp/rollback-functions.sh
+            
             # 所有步骤成功完成，清理回滚文件
-            ROLLBACK_FILE="/tmp/rollback-{{ .Globe.MiddlewareName }}-{{ .Globe.Namespace }}.txt"
-
-            if [ -f "$ROLLBACK_FILE" ]; then
-              echo "All operations completed successfully. Cleaning up rollback file..."
-              rm -f "$ROLLBACK_FILE"
-              echo "Rollback file cleaned up: $ROLLBACK_FILE"
-            else
-              echo "No rollback file found to clean up"
-            fi
-
+            cleanup_rollback
             echo "Operation completed successfully!"
     - name: updateMiddleware
       cmd:
