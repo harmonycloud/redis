@@ -390,7 +390,7 @@ spec:
             NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-sentinel-expose-external" = null')
             {{- end }}
             NECESSARY_JSON_BASE64=$(echo $NECESSARY_JSON | base64 -w 0)
-            kubectl annotate mid {{ .Globe.MiddlewareName }} middleware.cn/exposeNecessary=$NECESSARY_JSON_BASE64 -n {{ .Globe.Namespace }}
+            kubectl annotate mid {{ .Globe.MiddlewareName }} middleware.cn/exposeNecessary=$NECESSARY_JSON_BASE64 -n {{ .Globe.Namespace }} --overwrite=true
     - name: updateCluster
       type: "KubectlEdit" # KubectlGet、KubectlEdit、KubectlExec、Exec、HTTP
       cue: |
