@@ -134,6 +134,9 @@ spec:
                   kind: RedisCluster
                   name: ${MIDDLEWARE_NAME}
                   uid: ${CLUSTER_UID}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-sentinel-expose-external"
             spec:
               ports:
                 - name: redis
@@ -195,6 +198,9 @@ spec:
                   kind: RedisCluster
                   name: ${MIDDLEWARE_NAME}
                   uid: ${CLUSTER_UID}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-sentinel-expose-external"
             spec:
               ports:
                 - name: {{ $.Globe.MiddlewareName }}
@@ -231,14 +237,17 @@ spec:
                 kubernetes.io/ingress.class: {{ $.Necessary.traefikName }}
               name: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport
               namespace: ${NAMESPACE}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-sentinel-expose-external"
             spec:
-            entryPoints:
-            - {{ $.Necessary.traefikName }}-p{{ $value }}
-            routes:
-            - match: HostSNI ('*')
-            services:
-            - name: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod
-            port: ${PORT}
+              entryPoints:
+              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              routes:
+              - match: HostSNI ('*')
+              services:
+              - name: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod
+              port: ${PORT}
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
@@ -290,6 +299,9 @@ spec:
                   kind: RedisCluster
                   name: ${MIDDLEWARE_NAME}
                   uid: ${CLUSTER_UID}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-sentinel-expose-external"
             spec:
               ports:
                 - name: {{ $.Globe.MiddlewareName }}
@@ -326,14 +338,17 @@ spec:
                 kubernetes.io/ingress.class: {{ $.Necessary.traefikName }}
               name: {{ $.Globe.MiddlewareName }}-sentinel-nodeport
               namespace: ${NAMESPACE}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-sentinel-expose-external"
             spec:
-            entryPoints:
-            - {{ $.Necessary.traefikName }}-p{{ $value }}
-            routes:
-            - match: HostSNI ('*')
-            services:
-            - name: {{ $.Globe.MiddlewareName }}-sentinel
-            port: ${PORT}
+              entryPoints:
+              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              routes:
+              - match: HostSNI ('*')
+              services:
+              - name: {{ $.Globe.MiddlewareName }}-sentinel
+              port: ${PORT}
             EOF
             {{- if eq $.Necessary.handleType "create" }}
             # 如果创建成功，添加到回滚列表

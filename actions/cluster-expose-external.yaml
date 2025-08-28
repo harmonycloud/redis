@@ -133,6 +133,9 @@ spec:
                   kind: RedisCluster
                   name: ${MIDDLEWARE_NAME}
                   uid: ${CLUSTER_UID}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-cluster-expose-external"
             spec:
               ports:
                 - name: redis
@@ -192,6 +195,9 @@ spec:
                   kind: RedisCluster
                   name: ${MIDDLEWARE_NAME}
                   uid: ${CLUSTER_UID}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-cluster-expose-external"
             spec:
               ports:
                 - name: redis
@@ -254,6 +260,9 @@ spec:
                   kind: RedisCluster
                   name: ${MIDDLEWARE_NAME}
                   uid: ${CLUSTER_UID}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-cluster-expose-external"
             spec:
               ports:
                 - name: redis
@@ -294,13 +303,13 @@ spec:
               name: ${POD_NAME}-pod-nodeport
               namespace: ${NAMESPACE}
             spec:
-            entryPoints:
-            - {{ $.Necessary.traefikName }}-p{{ $value }}
-            routes:
-            - match: HostSNI ('*')
-            services:
-            - name: ${POD_NAME}-pod
-            port: ${PORT}
+              entryPoints:
+              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              routes:
+              - match: HostSNI ('*')
+              services:
+              - name: ${POD_NAME}-pod
+              port: ${PORT}
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
@@ -352,6 +361,9 @@ spec:
                   kind: RedisCluster
                   name: ${MIDDLEWARE_NAME}
                   uid: ${CLUSTER_UID}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-cluster-expose-external"
             spec:
               ports:
                 - name: redis
@@ -392,13 +404,13 @@ spec:
               name: ${POD_NAME}-pod-16379-nodeport
               namespace: ${NAMESPACE}
             spec:
-            entryPoints:
-            - {{ $.Necessary.traefikName }}-p{{ $value }}
-            routes:
-            - match: HostSNI ('*')
-            services:
-            - name: ${POD_NAME}-pod-16379
-            port: ${PORT}
+              entryPoints:
+              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              routes:
+              - match: HostSNI ('*')
+              services:
+              - name: ${POD_NAME}-pod-16379
+              port: ${PORT}
             EOF
             {{- if eq $.Necessary.handleType "create" }}
             # 如果创建成功，添加到回滚列表

@@ -134,6 +134,9 @@ spec:
                   kind: RedisCluster
                   name: ${MIDDLEWARE_NAME}
                   uid: ${CLUSTER_UID}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-sentinel-expose-readonly"
             spec:
               ports:
                 - name: ${MIDDLEWARE_NAME}
@@ -170,14 +173,17 @@ spec:
                 kubernetes.io/ingress.class: {{ $.Necessary.traefikName }}
               name: ${MIDDLEWARE_NAME}-readonly-nodeport
               namespace: ${NAMESPACE}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-sentinel-expose-readonly"
             spec:
-            entryPoints:
-            - {{ $.Necessary.traefikName }}-p{{ $value }}
-            routes:
-            - match: HostSNI ('*')
-            services:
-            - name: ${MIDDLEWARE_NAME}-readonly
-            port: ${PORT}
+              entryPoints:
+              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              routes:
+              - match: HostSNI ('*')
+              services:
+              - name: ${MIDDLEWARE_NAME}-readonly
+              port: ${PORT}
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
