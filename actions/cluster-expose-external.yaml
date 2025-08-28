@@ -85,7 +85,7 @@ spec:
       cmd:
         command:
           - |
-            {{- range $index, $value := .Necessary.addresses }}
+            {{- range $index, $value := .Necessary.ports }}
             POD_NAME="{{ $.Globe.MiddlewareName }}-{{ $index }}"
             NAMESPACE="{{ $.Globe.Namespace }}"
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
