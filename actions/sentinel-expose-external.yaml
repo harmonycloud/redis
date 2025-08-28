@@ -25,14 +25,15 @@ spec:
       cmd:
         command:
           - |
+            #!/bin/bash
             # 初始化回滚系统
             echo "Initializing rollback system..."
-
+            
             # 创建临时文件来跟踪已创建的资源
-            ROLLBACK_FILE="/tmp/rollback-{{ .Globe.MiddlewareName }}-{{ .Globe.Namespace }}.txt"
-            echo "# Rollback tracking file for {{ .Globe.MiddlewareName }} in {{ .Globe.Namespace }}" > $ROLLBACK_FILE
-            echo "# Created at $(date)" >> $ROLLBACK_FILE
-
+            ROLLBACK_FILE="/tmp/rollback-xxx-middleware.txt"
+            echo "# Rollback tracking file for xxx in middleware" > "$ROLLBACK_FILE"
+            echo "# Created at $(date)" >> "$ROLLBACK_FILE"
+            
             # 设置回滚函数
             rollback_all() {
               echo "=== ROLLBACK TRIGGERED ==="
@@ -43,7 +44,7 @@ spec:
                   # 跳过注释行和空行
                   if [[ ! "$line" =~ ^#.*$ ]] && [[ -n "$line" ]]; then
                     echo "Rolling back: $line"
-                    eval "$line"
+                    eval "$line" || echo "Failed to rollback: $line"
                   fi
                 done < "$ROLLBACK_FILE"
               fi
@@ -53,15 +54,16 @@ spec:
               echo "Rollback completed"
               exit 1
             }
-
-            # 设置错误处理
-            trap rollback_all ERR
-
+            
+            # 兼容性更好的错误处理设置
+            set -e  # 遇到错误立即退出
+            trap rollback_all EXIT  # 使用 EXIT 而不是 ERR
+            
             # 添加资源到回滚列表的函数
             add_to_rollback() {
               echo "$1" >> "$ROLLBACK_FILE"
             }
-
+            
             echo "Rollback system initialized successfully"
             echo "Rollback file: $ROLLBACK_FILE"
     - name: getUid
@@ -85,7 +87,7 @@ spec:
       cmd:
         command:
           - |
-            {{- range $index, $value := .Necessary.addresses }}
+            {{- range $index, $value := .Necessary.ports }}
             POD_NAME="{{ $.Globe.MiddlewareName }}-{{ $index }}"
             NAMESPACE="{{ $.Globe.Namespace }}"
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
