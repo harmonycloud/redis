@@ -154,6 +154,7 @@ spec:
               add_to_rollback "kubectl delete svc ${POD_NAME}-pod -n ${NAMESPACE} --ignore-not-found=true"
             else
               echo "Failed to create ClusterIP Service: ${POD_NAME}-pod"
+              execute_rollback
               exit 1
             fi
             {{- end }}
@@ -216,6 +217,7 @@ spec:
               add_to_rollback "kubectl delete svc ${POD_NAME}-pod-16379 -n ${NAMESPACE} --ignore-not-found=true"
             else
               echo "Failed to create internal ClusterIP Service: ${POD_NAME}-pod-16379"
+              execute_rollback
               exit 1
             fi
             {{- end }}
