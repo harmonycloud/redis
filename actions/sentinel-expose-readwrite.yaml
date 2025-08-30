@@ -60,7 +60,6 @@ spec:
             
               echo "Rollback completed"
               rm -f "$ROLLBACK_FILE"
-              exit 1
             }
             
             # 清理回滚文件（成功时）
@@ -149,6 +148,7 @@ spec:
             if echo "$ERROR_OUTPUT" | grep -q "provided port is already allocated"; then
               echo "Port {{ $value }} is already allocated for {{ $.Globe.MiddlewareName }}-readwrite, skipping service creation"
               execute_rollback
+              exit 1
             else
               # 如果创建成功，添加到回滚列表
               if [ $EXIT_CODE -eq 0 ]; then
@@ -156,6 +156,7 @@ spec:
               else
                 echo "Failed to create NodePort Service: ${MIDDLEWARE_NAME}-readwrite-nodeport"
                 execute_rollback
+                exit 1
               fi
             fi
             {{- else if eq $.Necessary.handleType "delete" }}
@@ -196,6 +197,7 @@ spec:
             else
               echo "Failed to create Traefik IngressRouteTCP: ${MIDDLEWARE_NAME}-readwrite-nodeport"
               execute_rollback
+              exit 1
             fi
             {{- else if eq $.Necessary.handleType "delete" }}
             kubectl delete -f /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml > /dev/null 2>&1
