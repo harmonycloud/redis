@@ -43,7 +43,6 @@ spec:
             # 添加资源到回滚列表的函数
             add_to_rollback() {
               echo "$1" >> "$ROLLBACK_FILE"
-              echo "Added to rollback: $1"
             }
             
             # 执行回滚
@@ -153,7 +152,6 @@ spec:
             # 如果创建成功，添加到回滚列表
             if [ $? -eq 0 ]; then
               add_to_rollback "kubectl delete svc ${POD_NAME}-pod -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created internal ClusterIP Service: ${POD_NAME}-pod (added to rollback list)"
             else
               echo "Failed to create ClusterIP Service: ${POD_NAME}-pod"
               exit 1
@@ -216,7 +214,6 @@ spec:
             # 如果创建成功，添加到回滚列表
             if [ $? -eq 0 ]; then
               add_to_rollback "kubectl delete svc ${POD_NAME}-pod-16379 -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created internal ClusterIP Service: ${POD_NAME}-pod-16379 (added to rollback list)"
             else
               echo "Failed to create internal ClusterIP Service: ${POD_NAME}-pod-16379"
               exit 1
@@ -244,7 +241,7 @@ spec:
 
             {{- if eq $.Necessary.exposeType "nodePort" }}
             # 创建NodePort Service的YAML内容
-            cat > /tmp/nodeport-service-${POD_NAME}.yaml << 'EOF'
+            cat > /tmp/nodeport-service-${POD_NAME}.yaml << EOF
             apiVersion: v1
             kind: Service
             metadata:
@@ -301,7 +298,7 @@ spec:
 
             {{- if eq $.Necessary.exposeType "traefik" }}
             # 创建Traefik IngressRouteTCP的YAML内容
-            cat > /tmp/traefik-ingress-${POD_NAME}.yaml << 'EOF'
+            cat > /tmp/traefik-ingress-${POD_NAME}.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
             metadata:
@@ -324,7 +321,6 @@ spec:
             # 如果创建成功，添加到回滚列表
             if [ $? -eq 0 ]; then
               add_to_rollback "kubectl delete ingressroutetcp ${POD_NAME}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created Traefik IngressRouteTCP: ${POD_NAME}-pod-nodeport (added to rollback list)"
             else
               echo "Failed to create Traefik IngressRouteTCP: ${POD_NAME}-pod-nodeport"
               exit 1
@@ -358,7 +354,7 @@ spec:
 
             {{- if eq $.Necessary.exposeType "nodePort" }}
             # 创建内部NodePort Service的YAML内容
-            cat > /tmp/internal-nodeport-service-${POD_NAME}.yaml << 'EOF'
+            cat > /tmp/internal-nodeport-service-${POD_NAME}.yaml << EOF
             apiVersion: v1
             kind: Service
             metadata:
@@ -399,9 +395,9 @@ spec:
               # 检查是否成功
               if [ $EXIT_CODE -eq 0 ]; then
                 add_to_rollback "kubectl delete svc ${POD_NAME}-pod-16379-nodeport -n ${NAMESPACE} --ignore-not-found=true"
-                echo "Created internal NodePort Service: ${POD_NAME}-pod-16379-nodeport (added to rollback list)"
               else
                 echo "Failed to create internal NodePort Service: ${POD_NAME}-pod-16379-nodeport"
+                echo "Error output: $ERROR_OUTPUT"
                 exit 1
               fi
             fi
@@ -415,7 +411,7 @@ spec:
 
             {{- if eq $.Necessary.exposeType "traefik" }}
             # 创建内部Traefik IngressRouteTCP的YAML内容
-            cat > /tmp/internal-traefik-ingress-${POD_NAME}.yaml << 'EOF'
+            cat > /tmp/internal-traefik-ingress-${POD_NAME}.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
             metadata:
@@ -438,7 +434,6 @@ spec:
             # 如果创建成功，添加到回滚列表
             if [ $? -eq 0 ]; then
               add_to_rollback "kubectl delete ingressroutetcp ${POD_NAME}-pod-16379-nodeport -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created internal Traefik IngressRouteTCP: ${POD_NAME}-pod-16379-nodeport (added to rollback list)"
             else
               echo "Failed to create internal Traefik IngressRouteTCP: ${POD_NAME}-pod-16379-nodeport"
               exit 1
