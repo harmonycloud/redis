@@ -117,11 +117,7 @@ spec:
             SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }} -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
 
             {{- if eq $.Necessary.exposeType "nodePort" }}
-            {{- if or (eq $.Necessary.handleType "create") (eq $.Necessary.handleType "update") }}
-            kubectl apply -f - <<EOF > /dev/null 2>&1
-            {{- else if eq $.Necessary.handleType "delete" }}
-            kubectl delete -f - <<EOF > /dev/null 2>&1
-            {{- end }}
+            cat > /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
             apiVersion: v1
             kind: Service
             metadata:
@@ -149,23 +145,32 @@ spec:
               type: NodePort
             EOF
 
-            {{- if eq $.Necessary.handleType "create" }}
-            # 如果创建成功，添加到回滚列表
-            if [ $? -eq 0 ]; then
-              add_to_rollback "kubectl delete svc ${MIDDLEWARE_NAME}-readonly-nodeport -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created NodePort Service: ${MIDDLEWARE_NAME}-readonly-nodeport (added to rollback list)"
-            else
-              echo "Failed to create NodePort Service: ${MIDDLEWARE_NAME}-readonly-nodeport"
-              exit 1
-            fi
-            {{- end }}
-            {{- end }}
-            {{- if eq $.Necessary.exposeType "traefik" }}
             {{- if or (eq $.Necessary.handleType "create") (eq $.Necessary.handleType "update") }}
-            kubectl apply -f - <<EOF > /dev/null 2>&1
+            ERROR_OUTPUT=$(kubectl apply -f /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml 2>&1)
+            EXIT_CODE=$?
+
+            if echo "$ERROR_OUTPUT" | grep -q "provided port is already allocated"; then
+              echo "Port {{ $value }} is already allocated for {{ $.Globe.MiddlewareName }}-readonly, skipping service creation"
+              execute_rollback
+            else
+              if [ $? -eq 0 ]; then
+                add_to_rollback "kubectl delete svc ${MIDDLEWARE_NAME}-readonly-nodeport -n ${NAMESPACE} --ignore-not-found=true"
+              else
+                echo "Failed to create NodePort Service: ${MIDDLEWARE_NAME}-readonly-nodeport"
+                execute_rollback
+                exit 1
+              fi
+            fi
             {{- else if eq $.Necessary.handleType "delete" }}
-            kubectl delete -f - <<EOF > /dev/null 2>&1
+            kubectl delete -f /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml > /dev/null 2>&1
+            echo "Deleted NodePort Service: {{ $.Globe.MiddlewareName }}-readonly-nodeport"
             {{- end }}
+            # 清理临时文件
+            rm -f /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml
+            {{- end }}
+
+            {{- if eq $.Necessary.exposeType "traefik" }}
+            cat /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
             metadata:
@@ -186,16 +191,22 @@ spec:
               port: ${PORT}
             EOF
 
-            {{- if eq $.Necessary.handleType "create" }}
+            {{- if or (eq $.Necessary.handleType "create") (eq $.Necessary.handleType "update") }}
+            kubectl apply -f /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml > /dev/null 2>&1
             # 如果创建成功，添加到回滚列表
             if [ $? -eq 0 ]; then
               add_to_rollback "kubectl delete ingressroutetcp ${MIDDLEWARE_NAME}-readonly-nodeport -n ${NAMESPACE} --ignore-not-found=true"
-              echo "Created Traefik IngressRouteTCP: ${MIDDLEWARE_NAME}-readonly-nodeport (added to rollback list)"
             else
               echo "Failed to create Traefik IngressRouteTCP: ${MIDDLEWARE_NAME}-readonly-nodeport"
+              execute_rollback
               exit 1
             fi
+            {{- else if eq $.Necessary.handleType "delete" }}
+            kubectl delete -f /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml > /dev/null 2>&1
+            echo "Deleted Traefik IngressRouteTCP: ${MIDDLEWARE_NAME}-readonly-nodeport"
             {{- end }}
+            # 清理临时文件
+            rm -f /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml
             {{- end }}
             {{- end }}
     - name: cleanupRollback
