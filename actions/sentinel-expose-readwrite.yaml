@@ -25,6 +25,7 @@ spec:
           - |
             # 创建回滚脚本文件，包含所有回滚相关的函数
             cat > /tmp/rollback-functions.sh << 'ROLLBACK_EOF'
+            
             # 回滚文件路径
             ROLLBACK_FILE="/tmp/rollback-{{ .Globe.MiddlewareName }}-{{ .Globe.Namespace }}.txt"
             
@@ -40,7 +41,6 @@ spec:
             # 添加资源到回滚列表的函数
             add_to_rollback() {
               echo "$1" >> "$ROLLBACK_FILE"
-              echo "Added to rollback: $1"
             }
             
             # 执行回滚

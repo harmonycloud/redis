@@ -215,6 +215,7 @@ spec:
             if echo "$ERROR_OUTPUT" | grep -q "provided port is already allocated"; then
               echo "Port {{ $value }} is already allocated for ${POD_NAME}, skipping service creation"
               execute_rollback
+              exit 1
             else
               if [ $EXIT_CODE -eq 0 ]; then
                 add_to_rollback "kubectl delete svc {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
@@ -327,6 +328,7 @@ spec:
             if echo "$ERROR_OUTPUT" | grep -q "provided port is already allocated"; then
               echo "Port {{ $value }} is already allocated for {{ $.Globe.MiddlewareName }}-sentinel, skipping service creation"
               execute_rollback
+              exit 1
             else
               if [ $EXIT_CODE -eq 0 ]; then
                 add_to_rollback "kubectl delete svc {{ $.Globe.MiddlewareName }}-sentinel-nodeport -n ${NAMESPACE} --ignore-not-found=true"

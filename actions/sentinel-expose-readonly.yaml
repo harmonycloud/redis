@@ -41,7 +41,6 @@ spec:
             # 添加资源到回滚列表的函数
             add_to_rollback() {
               echo "$1" >> "$ROLLBACK_FILE"
-              echo "Added to rollback: $1"
             }
             
             # 执行回滚
