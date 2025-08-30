@@ -278,15 +278,14 @@ spec:
             # 检查端口冲突
             if echo "$ERROR_OUTPUT" | grep -q "provided port is already allocated"; then
               echo "Port {{ $value }} is already allocated for ${POD_NAME}, skipping service creation"
-              execute_rollback()
+              echo "Error output: $ERROR_OUTPUT"
+              echo "Exit code: $EXIT_CODE"
             else
               # 检查是否成功
               if [ $EXIT_CODE -eq 0 ]; then
                 add_to_rollback "kubectl delete svc ${POD_NAME}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
-                echo "Created NodePort Service: ${POD_NAME}-pod-nodeport (added to rollback list)"
               else
                 echo "Failed to create NodePort Service: ${POD_NAME}-pod-nodeport"
-                execute_rollback()
                 exit 1
               fi
             fi
@@ -393,14 +392,12 @@ spec:
             # 检查端口冲突
             if echo "$ERROR_OUTPUT" | grep -q "provided port is already allocated"; then
               echo "Port {{ $value }} is already allocated for ${POD_NAME}, skipping service creation"
-              execute_rollback()
             else
               # 检查是否成功
               if [ $EXIT_CODE -eq 0 ]; then
                 add_to_rollback "kubectl delete svc ${POD_NAME}-pod-16379-nodeport -n ${NAMESPACE} --ignore-not-found=true"
               else
                 echo "Failed to create internal NodePort Service: ${POD_NAME}-pod-16379-nodeport"
-                execute_rollback()
                 exit 1
               fi
             fi
