@@ -336,6 +336,7 @@ spec:
             # 清理临时文件
             rm -f /tmp/traefik-ingress-${POD_NAME}.yaml
             {{- end }}
+            {{- end }}
     - name: createInternalNodePort
       output:
         type: "string"
@@ -448,6 +449,7 @@ spec:
             {{- end }}
             # 清理临时文件
             rm -f /tmp/internal-traefik-ingress-${POD_NAME}.yaml
+            {{- end }}
             {{- end }}
     - name: cleanupRollback
       output:
