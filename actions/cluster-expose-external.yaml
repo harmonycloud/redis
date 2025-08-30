@@ -278,6 +278,7 @@ spec:
             # 检查端口冲突
             if echo "$ERROR_OUTPUT" | grep -q "provided port is already allocated"; then
               echo "Port {{ $value }} is already allocated for ${POD_NAME}, skipping service creation"
+              exit 1
             else
               # 检查是否成功
               if [ $EXIT_CODE -eq 0 ]; then
@@ -391,6 +392,7 @@ spec:
             # 检查端口冲突
             if echo "$ERROR_OUTPUT" | grep -q "provided port is already allocated"; then
               echo "Port {{ $value }} is already allocated for ${POD_NAME}, skipping service creation"
+              exit 1
             else
               # 检查是否成功
               if [ $EXIT_CODE -eq 0 ]; then
