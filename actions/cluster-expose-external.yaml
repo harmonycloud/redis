@@ -62,6 +62,7 @@ spec:
             
               echo "Rollback completed"
               rm -f "$ROLLBACK_FILE"
+              exit 1
             }
             
             # 清理回滚文件（成功时）
@@ -155,7 +156,6 @@ spec:
             else
               echo "Failed to create ClusterIP Service: ${POD_NAME}-pod"
               execute_rollback
-              exit 1
             fi
             {{- end }}
             {{- end }}
@@ -218,7 +218,6 @@ spec:
             else
               echo "Failed to create internal ClusterIP Service: ${POD_NAME}-pod-16379"
               execute_rollback
-              exit 1
             fi
             {{- end }}
             {{- end }}
@@ -288,7 +287,6 @@ spec:
               else
                 echo "Failed to create NodePort Service: ${POD_NAME}-pod-nodeport"
                 execute_rollback
-                exit 1
               fi
             fi
             {{- else if eq $.Necessary.handleType "delete" }}
@@ -327,7 +325,6 @@ spec:
             else
               echo "Failed to create Traefik IngressRouteTCP: ${POD_NAME}-pod-nodeport"
               execute_rollback
-              exit 1
             fi
             {{- else if eq $.Necessary.handleType "delete" }}
             kubectl delete -f /tmp/traefik-ingress-${POD_NAME}.yaml > /dev/null 2>&1
@@ -403,7 +400,6 @@ spec:
               else
                 echo "Failed to create internal NodePort Service: ${POD_NAME}-pod-16379-nodeport"
                 execute_rollback
-                exit 1
               fi
             fi
             {{- else if eq $.Necessary.handleType "delete" }}
@@ -442,7 +438,6 @@ spec:
             else
               echo "Failed to create internal Traefik IngressRouteTCP: ${POD_NAME}-pod-16379-nodeport"
               execute_rollback
-              exit 1
             fi
             {{- else if eq $.Necessary.handleType "delete" }}
             kubectl delete -f /tmp/internal-traefik-ingress-${POD_NAME}.yaml > /dev/null 2>&1
