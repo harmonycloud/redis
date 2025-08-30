@@ -243,11 +243,8 @@ spec:
             TARGET_PORT=$(kubectl get svc ${POD_NAME}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
 
             {{- if eq $.Necessary.exposeType "nodePort" }}
-            {{- if eq $.Necessary.handleType "create" }}
-            ERROR_OUTPUT=$(kubectl apply -f - <<EOF 2>&1
-            {{- else if eq $.Necessary.handleType "delete" }}
-            kubectl delete -f - <<EOF > /dev/null 2>&1
-            {{- end }}
+            # 创建NodePort Service的YAML内容
+            cat > /tmp/nodeport-service-${POD_NAME}.yaml << 'EOF'
             apiVersion: v1
             kind: Service
             metadata:
@@ -279,6 +276,7 @@ spec:
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
+            ERROR_OUTPUT=$(kubectl apply -f /tmp/nodeport-service-${POD_NAME}.yaml 2>&1)
             EXIT_CODE=$?
             # 检查端口冲突
             if echo "$ERROR_OUTPUT" | grep -q "provided port is already allocated"; then
@@ -293,14 +291,17 @@ spec:
                 exit 1
               fi
             fi
-            {{- end }}
-            {{- end }}
-            {{- if eq $.Necessary.exposeType "traefik" }}
-            {{- if eq $.Necessary.handleType "create" }}
-            kubectl apply -f - <<EOF > /dev/null 2>&1
             {{- else if eq $.Necessary.handleType "delete" }}
-            kubectl delete -f - <<EOF > /dev/null 2>&1
+            kubectl delete -f /tmp/nodeport-service-${POD_NAME}.yaml > /dev/null 2>&1
+            echo "Deleted NodePort Service: ${POD_NAME}-pod-nodeport"
             {{- end }}
+            # 清理临时文件
+            rm -f /tmp/nodeport-service-${POD_NAME}.yaml
+            {{- end }}
+
+            {{- if eq $.Necessary.exposeType "traefik" }}
+            # 创建Traefik IngressRouteTCP的YAML内容
+            cat > /tmp/traefik-ingress-${POD_NAME}.yaml << 'EOF'
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
             metadata:
@@ -319,6 +320,7 @@ spec:
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
+            kubectl apply -f /tmp/traefik-ingress-${POD_NAME}.yaml > /dev/null 2>&1
             # 如果创建成功，添加到回滚列表
             if [ $? -eq 0 ]; then
               add_to_rollback "kubectl delete ingressroutetcp ${POD_NAME}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
@@ -327,8 +329,12 @@ spec:
               echo "Failed to create Traefik IngressRouteTCP: ${POD_NAME}-pod-nodeport"
               exit 1
             fi
+            {{- else if eq $.Necessary.handleType "delete" }}
+            kubectl delete -f /tmp/traefik-ingress-${POD_NAME}.yaml > /dev/null 2>&1
+            echo "Deleted Traefik IngressRouteTCP: ${POD_NAME}-pod-nodeport"
             {{- end }}
-            {{- end }}
+            # 清理临时文件
+            rm -f /tmp/traefik-ingress-${POD_NAME}.yaml
             {{- end }}
     - name: createInternalNodePort
       output:
@@ -350,11 +356,8 @@ spec:
             TARGET_PORT=$(kubectl get svc ${POD_NAME}-pod-16379 -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
 
             {{- if eq $.Necessary.exposeType "nodePort" }}
-            {{- if eq $.Necessary.handleType "create" }}
-            ERROR_OUTPUT=$(kubectl apply -f - <<EOF 2>&1
-            {{- else if $.Necessary.handleType "delete" }}
-            kubectl delete -f - <<EOF > /dev/null 2>&1
-            {{- end }}
+            # 创建内部NodePort Service的YAML内容
+            cat > /tmp/internal-nodeport-service-${POD_NAME}.yaml << 'EOF'
             apiVersion: v1
             kind: Service
             metadata:
@@ -386,6 +389,7 @@ spec:
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
+            ERROR_OUTPUT=$(kubectl apply -f /tmp/internal-nodeport-service-${POD_NAME}.yaml 2>&1)
             EXIT_CODE=$?
             # 检查端口冲突
             if echo "$ERROR_OUTPUT" | grep -q "provided port is already allocated"; then
@@ -400,14 +404,17 @@ spec:
                 exit 1
               fi
             fi
+            {{- else if eq $.Necessary.handleType "delete" }}
+            kubectl delete -f /tmp/internal-nodeport-service-${POD_NAME}.yaml > /dev/null 2>&1
+            echo "Deleted internal NodePort Service: ${POD_NAME}-pod-16379-nodeport"
             {{- end }}
+            # 清理临时文件
+            rm -f /tmp/internal-nodeport-service-${POD_NAME}.yaml
             {{- end }}
+
             {{- if eq $.Necessary.exposeType "traefik" }}
-            {{- if eq $.Necessary.handleType "create" }}
-            kubectl apply -f - <<EOF > /dev/null 2>&1
-            {{- else if $.Necessary.handleType "delete" }}
-            kubectl delete -f - <<EOF > /dev/null 2>&1
-            {{- end }}
+            # 创建内部Traefik IngressRouteTCP的YAML内容
+            cat > /tmp/internal-traefik-ingress-${POD_NAME}.yaml << 'EOF'
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
             metadata:
@@ -424,7 +431,9 @@ spec:
               - name: ${POD_NAME}-pod-16379
               port: ${PORT}
             EOF
+
             {{- if eq $.Necessary.handleType "create" }}
+            kubectl apply -f /tmp/internal-traefik-ingress-${POD_NAME}.yaml > /dev/null 2>&1
             # 如果创建成功，添加到回滚列表
             if [ $? -eq 0 ]; then
               add_to_rollback "kubectl delete ingressroutetcp ${POD_NAME}-pod-16379-nodeport -n ${NAMESPACE} --ignore-not-found=true"
@@ -433,8 +442,12 @@ spec:
               echo "Failed to create internal Traefik IngressRouteTCP: ${POD_NAME}-pod-16379-nodeport"
               exit 1
             fi
+            {{- else if eq $.Necessary.handleType "delete" }}
+            kubectl delete -f /tmp/internal-traefik-ingress-${POD_NAME}.yaml > /dev/null 2>&1
+            echo "Deleted internal Traefik IngressRouteTCP: ${POD_NAME}-pod-16379-nodeport"
             {{- end }}
-            {{- end }}
+            # 清理临时文件
+            rm -f /tmp/internal-traefik-ingress-${POD_NAME}.yaml
             {{- end }}
     - name: cleanupRollback
       output:
