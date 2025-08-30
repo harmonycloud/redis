@@ -153,7 +153,7 @@ spec:
               echo "Port {{ $value }} is already allocated for {{ $.Globe.MiddlewareName }}-readonly, skipping service creation"
               execute_rollback
             else
-              if [ $? -eq 0 ]; then
+              if [ $EXIT_CODE -eq 0 ]; then
                 add_to_rollback "kubectl delete svc ${MIDDLEWARE_NAME}-readonly-nodeport -n ${NAMESPACE} --ignore-not-found=true"
               else
                 echo "Failed to create NodePort Service: ${MIDDLEWARE_NAME}-readonly-nodeport"

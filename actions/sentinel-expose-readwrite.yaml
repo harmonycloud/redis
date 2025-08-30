@@ -150,7 +150,7 @@ spec:
               execute_rollback
             else
               # 如果创建成功，添加到回滚列表
-              if [ $? -eq 0 ]; then
+              if [ $EXIT_CODE -eq 0 ]; then
                 add_to_rollback "kubectl delete svc ${MIDDLEWARE_NAME}-readwrite-nodeport -n ${NAMESPACE} --ignore-not-found=true"
               else
                 echo "Failed to create NodePort Service: ${MIDDLEWARE_NAME}-readwrite-nodeport"
