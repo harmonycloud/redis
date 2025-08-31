@@ -1,7 +1,7 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareBaseline
 metadata:
-  name: redis-cluster
+  name: redis-cluster-active
   labels:
     nephele/user: admin
   annotations:
