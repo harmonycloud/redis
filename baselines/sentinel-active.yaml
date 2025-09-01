@@ -8,7 +8,7 @@ metadata:
     datapath: '{{ printf "/data/redis/cluster.local/%s/%s/{POD_NAME}/data" .Globe.Namespace .Globe.Name }}'
     baselineName: "哨兵模式"
     description: "哨兵模式基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
-    active: "true"
+    active: "2"
 spec:
   operatorBaseline:
     name: redis-operator-standard
