@@ -248,11 +248,11 @@ spec:
             spec:
               entryPoints:
               - {{ $.Necessary.traefikName }}-p{{ $value }}
-              routes:
+                routes:
               - match: HostSNI ('*')
-              services:
+                services:
               - name: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod
-              port: ${PORT}
+                port: ${PORT}
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
@@ -361,11 +361,11 @@ spec:
             spec:
               entryPoints:
               - {{ $.Necessary.traefikName }}-p{{ $value }}
-              routes:
+                routes:
               - match: HostSNI ('*')
-              services:
+                services:
               - name: {{ $.Globe.MiddlewareName }}-sentinel
-              port: ${PORT}
+                port: ${PORT}
             EOF
             {{- if eq $.Necessary.handleType "create" }}
             kubectl apply -f /tmp/sentinel-traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml > /dev/null 2>&1

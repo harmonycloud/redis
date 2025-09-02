@@ -185,11 +185,11 @@ spec:
             spec:
               entryPoints:
               - {{ $.Necessary.traefikName }}-p{{ $value }}
-              routes:
+                routes:
               - match: HostSNI ('*')
-              services:
+                services:
               - name: ${MIDDLEWARE_NAME}-predixy
-              port: ${PORT}
+                port: ${PORT}
             EOF
 
             {{- if or (eq $.Necessary.handleType "create") (eq $.Necessary.handleType "update") }}
