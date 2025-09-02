@@ -11,4 +11,4 @@ app:
 owner: harmonycloud # 供应商
 type: db # 类型
 chartType: PostgreSQL
-description: CloudDB Redis缓存数据库
+description: Redis缓存数据库
