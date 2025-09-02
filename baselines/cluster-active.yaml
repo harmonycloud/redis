@@ -76,11 +76,11 @@ spec:
         hostNetwork: false
         resources:
           limits:
-            cpu: "{{ .Necessary.resource.redis.limits.cpu }}"
-            memory: "{{ .Necessary.resource.redis.limits.memory }}"
+            cpu: '"{{ .Necessary.resource.redis.limits.cpu }}"'
+            memory: '"{{ .Necessary.resource.redis.limits.memory }}"'
           requests:
-            cpu: "{{ .Necessary.resource.redis.requests.cpu }}"
-            memory: "{{ .Necessary.resource.redis.requests.memory }}"
+            cpu: '"{{ .Necessary.resource.redis.requests.cpu }}"'
+            memory: '"{{ .Necessary.resource.redis.requests.memory }}"'
         updateStrategy: { }
         command: /bin/launch.sh
     exporter:
@@ -102,7 +102,7 @@ spec:
           storageClassName: '{{ range $i, $v := .Necessary.resource.redis.volumes }}{{ if $i }},{{ end }}{{ $v.storageClass }}{{ end }}'
           resources:
             requests:
-              storage: '{{ index .Necessary.resource.redis.volumes 0 "size" }}'
+              storage: '"{{ index .Necessary.resource.redis.volumes 0 "size" }}"'
   configurations:
     - name: redis-credential
       values:

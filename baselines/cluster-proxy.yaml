@@ -89,11 +89,11 @@ spec:
       replicas: "{{ .Necessary.resource.predixy.replicas }}"
       resources:
         requests:
-          cpu: "{{ .Necessary.resource.predixy.requests.cpu }}"
-          memory: "{{ .Necessary.resource.predixy.requests.memory }}"
+          cpu: '"{{ .Necessary.resource.predixy.requests.cpu }}"'
+          memory: '"{{ .Necessary.resource.predixy.requests.memory }}"'
         limits:
-          cpu: "{{ .Necessary.resource.predixy.limits.cpu }}"
-          memory: "{{ .Necessary.resource.predixy.limits.memory }}"
+          cpu: '"{{ .Necessary.resource.predixy.limits.cpu }}"'
+          memory: '"{{ .Necessary.resource.predixy.limits.memory }}"'
       securityContext: { }
       strategy:
         rollingUpdate:
@@ -121,11 +121,11 @@ spec:
         hostNetwork: false
         resources:
           limits:
-            cpu: "{{ .Necessary.resource.redis.limits.cpu }}"
-            memory: "{{ .Necessary.resource.redis.limits.memory }}"
+            cpu: '"{{ .Necessary.resource.redis.limits.cpu }}"'
+            memory: '"{{ .Necessary.resource.redis.limits.memory }}"'
           requests:
-            cpu: "{{ .Necessary.resource.redis.requests.cpu }}"
-            memory: "{{ .Necessary.resource.redis.requests.memory }}"
+            cpu: '"{{ .Necessary.resource.redis.requests.cpu }}"'
+            memory: '"{{ .Necessary.resource.redis.requests.memory }}"'
         updateStrategy: { }
         command: /bin/launch.sh
     exporter:
@@ -147,7 +147,7 @@ spec:
           storageClassName: "{{ .Necessary.resource.redis.volume.storageClass }}"
           resources:
             requests:
-              storage: "{{ .Necessary.resource.redis.volume.size }}"
+              storage: '"{{ .Necessary.resource.redis.volume.size }}"'
   configurations:
     - name: redis-credential
       values:

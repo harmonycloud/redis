@@ -107,11 +107,11 @@ spec:
       replicas: "{{ .Necessary.resource.sentinel.replicas }}"
       resources:
         requests:
-          cpu: "{{ .Necessary.resource.sentinel.requests.cpu }}"
-          memory: "{{ .Necessary.resource.sentinel.requests.memory }}"
+          cpu: '"{{ .Necessary.resource.sentinel.requests.cpu }}"'
+          memory: '"{{ .Necessary.resource.sentinel.requests.memory }}"'
         limits:
-          cpu: "{{ .Necessary.resource.sentinel.limits.cpu }}"
-          memory: "{{ .Necessary.resource.sentinel.limits.memory }}"
+          cpu: '"{{ .Necessary.resource.sentinel.limits.cpu }}"'
+          memory: '"{{ .Necessary.resource.sentinel.limits.memory }}"'
       securityContext: {}
       strategy:
         rollingUpdate:
@@ -139,11 +139,11 @@ spec:
         hostNetwork: false
         resources:
           limits:
-            cpu: "{{ .Necessary.resource.redis.limits.cpu }}"
-            memory: "{{ .Necessary.resource.redis.limits.memory }}"
+            cpu: '"{{ .Necessary.resource.redis.limits.cpu }}"'
+            memory: '"{{ .Necessary.resource.redis.limits.memory }}"'
           requests:
-            cpu: "{{ .Necessary.resource.redis.requests.cpu }}"
-            memory: "{{ .Necessary.resource.redis.requests.memory }}"
+            cpu: '"{{ .Necessary.resource.redis.requests.cpu }}"'
+            memory: '"{{ .Necessary.resource.redis.requests.memory }}"'
         updateStrategy: {}
         command: /bin/launch.sh
     exporter:
@@ -165,7 +165,7 @@ spec:
           storageClassName: "{{ .Necessary.resource.redis.volume.storageClass }}"
           resources:
             requests:
-              storage: "{{ .Necessary.resource.redis.volume.size }}"
+              storage: '"{{ .Necessary.resource.redis.volume.size }}"'
   configurations:
     - name: redis-credential
       values:
