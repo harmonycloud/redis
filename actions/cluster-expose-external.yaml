@@ -321,12 +321,14 @@ spec:
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
-            kubectl apply -f /tmp/traefik-ingress-${POD_NAME}.yaml > /dev/null 2>&1
+            ERROR_OUTPUT=$(kubectl apply -f /tmp/traefik-ingress-${POD_NAME}.yaml 2>&1)
+            EXIT_CODE=$?
             # 如果创建成功，添加到回滚列表
-            if [ $? -eq 0 ]; then
+            if [ $EXIT_CODE -eq 0 ]; then
               add_to_rollback "kubectl delete ingressroutetcp ${POD_NAME}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
             else
               echo "Failed to create Traefik IngressRouteTCP: ${POD_NAME}-pod-nodeport"
+              echo "$ERROR_OUTPUT"
               execute_rollback
               exit 1
             fi
@@ -437,12 +439,14 @@ spec:
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
-            kubectl apply -f /tmp/internal-traefik-ingress-${POD_NAME}.yaml > /dev/null 2>&1
+            ERROR_OUTPUT=$(kubectl apply -f /tmp/internal-traefik-ingress-${POD_NAME}.yaml 2>&1)
+            EXIT_CODE=$?
             # 如果创建成功，添加到回滚列表
-            if [ $? -eq 0 ]; then
+            if [ $EXIT_CODE -eq 0 ]; then
               add_to_rollback "kubectl delete ingressroutetcp ${POD_NAME}-pod-16379-nodeport -n ${NAMESPACE} --ignore-not-found=true"
             else
               echo "Failed to create internal Traefik IngressRouteTCP: ${POD_NAME}-pod-16379-nodeport"
+              echo "$ERROR_OUTPUT"
               execute_rollback
               exit 1
             fi

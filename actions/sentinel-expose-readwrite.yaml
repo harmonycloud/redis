@@ -190,12 +190,14 @@ spec:
             EOF
 
             {{- if or (eq $.Necessary.handleType "create") (eq $.Necessary.handleType "update") }}
-            kubectl apply -f /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml > /dev/null 2>&1
+            ERROR_OUTPUT=$(kubectl apply -f /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml 2>&1)
+            EXIT_CODE=$?
             # 如果创建成功，添加到回滚列表
-            if [ $? -eq 0 ]; then
+            if [ $EXIT_CODE -eq 0 ]; then
               add_to_rollback "kubectl delete ingressroutetcp ${MIDDLEWARE_NAME}-readwrite-nodeport -n ${NAMESPACE} --ignore-not-found=true"
             else
               echo "Failed to create Traefik IngressRouteTCP: ${MIDDLEWARE_NAME}-readwrite-nodeport"
+              echo "$ERROR_OUTPUT"
               execute_rollback
               exit 1
             fi
