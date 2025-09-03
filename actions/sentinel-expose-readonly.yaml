@@ -184,11 +184,11 @@ spec:
             spec:
               entryPoints:
               - {{ $.Necessary.traefikName }}-p{{ $value }}
-                routes:
+              routes:
               - match: HostSNI ('*')
                 services:
-              - name: ${MIDDLEWARE_NAME}-readonly
-                port: ${PORT}
+                - name: ${MIDDLEWARE_NAME}-readonly
+                  port: ${PORT}
             EOF
 
             {{- if or (eq $.Necessary.handleType "create") (eq $.Necessary.handleType "update") }}
