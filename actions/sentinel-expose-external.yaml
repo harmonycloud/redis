@@ -429,7 +429,7 @@ spec:
                     sentinelAddresses: {
                       {{- if eq .Necessary.handleType "create" }}
                       {{- range $index, $value := .Necessary.sentinelPorts }}
-                      "{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}": {{ $value }}
+                      "{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}": "{{ $value }}"
                       {{- end }}
                       {{- end }}
                     }

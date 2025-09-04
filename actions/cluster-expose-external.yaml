@@ -27,10 +27,10 @@ spec:
           - |
             # 创建回滚脚本文件，包含所有回滚相关的函数
             cat > /tmp/rollback-functions.sh << 'ROLLBACK_EOF'
-            
+
             # 回滚文件路径
             ROLLBACK_FILE="/tmp/rollback-{{ .Globe.MiddlewareName }}-{{ .Globe.Namespace }}.txt"
-            
+
             # 初始化回滚系统
             init_rollback() {
               echo "Initializing rollback system..."
@@ -39,17 +39,17 @@ spec:
               echo "Rollback system initialized successfully"
               echo "Rollback file: $ROLLBACK_FILE"
             }
-            
+
             # 添加资源到回滚列表的函数
             add_to_rollback() {
               echo "$1" >> "$ROLLBACK_FILE"
             }
-            
+
             # 执行回滚
             execute_rollback() {
               echo "=== ROLLBACK TRIGGERED ==="
               echo "Cleaning up all created resources..."
-            
+
               if [ -f "$ROLLBACK_FILE" ]; then
                 while IFS= read -r line; do
                   # 跳过注释行和空行
@@ -59,29 +59,29 @@ spec:
                   fi
                 done < "$ROLLBACK_FILE"
               fi
-            
+
               echo "Rollback completed"
               rm -f "$ROLLBACK_FILE"
             }
-            
+
             # 清理回滚文件（成功时）
             cleanup_rollback() {
               echo "Script completed successfully, cleaning up rollback file"
               rm -f "$ROLLBACK_FILE"
             }
             ROLLBACK_EOF
-            
+
             # 设置执行权限
             chmod +x /tmp/rollback-functions.sh
-            
+
             # 初始化回滚系统
             source /tmp/rollback-functions.sh
             init_rollback
-            
+
             # 设置错误处理和回滚trap
             set -e
             trap execute_rollback EXIT
-            
+
             echo "Rollback system initialized successfully"
             echo "Rollback file: $ROLLBACK_FILE"
     - name: getUid
@@ -107,7 +107,7 @@ spec:
           - |
             # 加载回滚函数
             source /tmp/rollback-functions.sh
-            
+
             {{- range $index, $value := .Necessary.ports }}
             POD_NAME="{{ $.Globe.MiddlewareName }}-{{ $index }}"
             NAMESPACE="{{ $.Globe.Namespace }}"
@@ -467,7 +467,7 @@ spec:
           - |
             # 加载回滚函数
             source /tmp/rollback-functions.sh
-            
+
             # 所有步骤成功完成，清理回滚文件
             cleanup_rollback
             echo "Operation completed successfully!"
