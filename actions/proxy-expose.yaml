@@ -158,6 +158,7 @@ spec:
                 add_to_rollback "kubectl delete svc ${MIDDLEWARE_NAME}-predixy-nodeport -n ${NAMESPACE} --ignore-not-found=true"
               else
                 echo "Failed to create NodePort Service: ${MIDDLEWARE_NAME}-predixy-nodeport"
+                echo "$ERROR_OUTPUT"
                 execute_rollback
                 exit 1
               fi

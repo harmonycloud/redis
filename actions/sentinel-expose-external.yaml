@@ -154,6 +154,7 @@ spec:
               add_to_rollback "kubectl delete svc ${POD_NAME}-pod -n ${NAMESPACE} --ignore-not-found=true"
             else
               echo "Failed to create ClusterIP Service: ${POD_NAME}-pod"
+              echo "$ERROR_OUTPUT"
               execute_rollback
               exit 1
             fi
@@ -221,6 +222,7 @@ spec:
                 add_to_rollback "kubectl delete svc {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
               else
                 echo "Failed to create NodePort Service: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport"
+                echo "$ERROR_OUTPUT"
                 execute_rollback
                 exit 1
               fi
@@ -336,6 +338,7 @@ spec:
                 add_to_rollback "kubectl delete svc {{ $.Globe.MiddlewareName }}-sentinel-nodeport -n ${NAMESPACE} --ignore-not-found=true"
               else
                 echo "Failed to create internal NodePort Service: {{ $.Globe.MiddlewareName }}-sentinel-nodeport"
+                echo "$ERROR_OUTPUT"
                 execute_rollback
                 exit 1
               fi
