@@ -11,7 +11,7 @@ spec:
     - "redis-sentinel"
   necessary:
     handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,update,delete","visible": true, "update": false}' # create、update、delete
-    exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"nodePort,traefik","visible": true, "update": false}' # nodePort、traefik
+    exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress-TCP","visible": true, "update": false}' # nodePort、traefik
     traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true,"visible": true, "update": false}'
     ports: '{"type":"expose","label":"ports","required":true,"size":"1","visible": true,"placeholder":"请输入端口号,点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号", "update": true}'# 不固定，根据baseline提供的渲染
     protocol: '{"type":"enum","label":"协议","required":true,"options":"TCP","visible": true, "update": false}' # 协议
@@ -115,7 +115,7 @@ spec:
             TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-readonly -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
             SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }} -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
 
-            {{- if eq $.Necessary.exposeType "nodePort" }}
+            {{- if eq $.Necessary.exposeType "NodePort" }}
             cat > /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
             apiVersion: v1
             kind: Service
@@ -169,7 +169,7 @@ spec:
             rm -f /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml
             {{- end }}
 
-            {{- if eq $.Necessary.exposeType "traefik" }}
+            {{- if eq $.Necessary.exposeType "Ingress-TCP" }}
             cat /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP

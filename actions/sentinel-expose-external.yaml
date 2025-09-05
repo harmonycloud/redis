@@ -11,7 +11,7 @@ spec:
     - "redis-sentinel"
   necessary:
     handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,delete","visible": true}' # create、delete
-    exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"nodePort,traefik","visible": true}' # nodePort、traefik
+    exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress-TCP","visible": true}' # nodePort、traefik
     traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true,"visible": true}'
     host: '{"type":"string","label":"负载均衡地址","required":true,"visible": false}' # nodeport主机地址
     ports: '{"type":"expose","label":"ports","required":true,"ref":"master*1,slave*1,","size":"1","visible": true,"placeholder":"请输入端口号,点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号"}'# 不固定，根据baseline提供的渲染
@@ -178,7 +178,7 @@ spec:
             TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
             SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
 
-            {{- if eq $.Necessary.exposeType "nodePort" }}
+            {{- if eq $.Necessary.exposeType "NodePort" }}
             # 创建NodePort Service的YAML内容
             cat > /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
             apiVersion: v1
@@ -233,7 +233,7 @@ spec:
             rm -f /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml
             {{- end }}
 
-            {{- if eq $.Necessary.exposeType "traefik" }}
+            {{- if eq $.Necessary.exposeType "Ingress-TCP" }}
             cat /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
@@ -292,7 +292,7 @@ spec:
             TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
             SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
 
-            {{- if eq $.Necessary.exposeType "nodePort" }}
+            {{- if eq $.Necessary.exposeType "NodePort" }}
             cat > /tmp/sentinel-nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml << EOF
             apiVersion: v1
             kind: Service
@@ -346,7 +346,7 @@ spec:
             rm -f /tmp/sentinel-nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml
             {{- end }}
 
-            {{- if eq $.Necessary.exposeType "traefik" }}
+            {{- if eq $.Necessary.exposeType "Ingress-TCP" }}
             cat /tmp/sentinel-traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
