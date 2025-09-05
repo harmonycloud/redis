@@ -425,14 +425,7 @@ spec:
                     addresses: {
                       {{- if eq .Necessary.handleType "create" }}
                       {{- range $index, $value := .Necessary.ports }}
-                      "{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}": "{{ $.Necessary.host }}:{{ $value }}"
-                      {{- end }}
-                      {{- end }}
-                    }
-                    sentinelAddresses: {
-                      {{- if eq .Necessary.handleType "create" }}
-                      {{- range $index, $value := .Necessary.sentinelPorts }}
-                      "{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}": "{{ $value }}"
+                      "{{ $.Globe.MiddlewareName }}-{{ $index }}": "{{ $.Necessary.host }}:{{ $value }}"
                       {{- end }}
                       {{- end }}
                     }
