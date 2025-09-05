@@ -234,7 +234,7 @@ spec:
             {{- end }}
 
             {{- if eq $.Necessary.exposeType "traefik" }}
-            cat /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
+            cat > /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
             metadata:
@@ -349,7 +349,7 @@ spec:
             {{- end }}
 
             {{- if eq $.Necessary.exposeType "traefik" }}
-            cat /tmp/sentinel-traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml << EOF
+            cat > /tmp/sentinel-traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
             metadata:
