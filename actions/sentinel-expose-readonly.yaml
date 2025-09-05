@@ -169,7 +169,7 @@ spec:
             rm -f /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml
             {{- end }}
 
-            {{- if eq $.Necessary.exposeType "traefik" }}
+            {{- if eq $.Necessary.exposeType "Ingress-TCP" }}
             cat > /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP

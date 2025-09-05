@@ -233,7 +233,7 @@ spec:
             rm -f /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml
             {{- end }}
 
-            {{- if eq $.Necessary.exposeType "traefik" }}
+            {{- if eq $.Necessary.exposeType "Ingress-TCP" }}
             cat > /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
@@ -294,7 +294,7 @@ spec:
             TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
             SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
 
-            {{- if eq $.Necessary.exposeType "nodePort" }}
+            {{- if eq $.Necessary.exposeType "NodePort" }}
             cat > /tmp/sentinel-nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml << EOF
             apiVersion: v1
             kind: Service
@@ -348,7 +348,7 @@ spec:
             rm -f /tmp/sentinel-nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml
             {{- end }}
 
-            {{- if eq $.Necessary.exposeType "traefik" }}
+            {{- if eq $.Necessary.exposeType "Ingress-TCP" }}
             cat > /tmp/sentinel-traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
