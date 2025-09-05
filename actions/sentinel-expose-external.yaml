@@ -233,8 +233,8 @@ spec:
             rm -f /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml
             {{- end }}
 
-            {{- if eq $.Necessary.exposeType "Ingress-TCP" }}
-            cat /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
+            {{- if eq $.Necessary.exposeType "traefik" }}
+            cat > /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
             metadata:
@@ -256,12 +256,14 @@ spec:
             EOF
 
             {{- if eq $.Necessary.handleType "create" }}
-            kubectl apply -f /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml > /dev/null 2>&1
+            ERROR_OUTPUT=$(kubectl apply -f /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml 2>&1)
+            EXIT_CODE=$?
             # 如果创建成功，添加到回滚列表
-            if [ $? -eq 0 ]; then
+            if [ $EXIT_CODE -eq 0 ]; then
               add_to_rollback "kubectl delete ingressroutetcp {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport -n ${NAMESPACE} --ignore-not-found=true"
             else
               echo "Failed to create Traefik IngressRouteTCP: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod-nodeport"
+              echo "$ERROR_OUTPUT"
               execute_rollback
               exit 1
             fi
@@ -292,7 +294,7 @@ spec:
             TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
             SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
 
-            {{- if eq $.Necessary.exposeType "NodePort" }}
+            {{- if eq $.Necessary.exposeType "nodePort" }}
             cat > /tmp/sentinel-nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml << EOF
             apiVersion: v1
             kind: Service
@@ -346,8 +348,8 @@ spec:
             rm -f /tmp/sentinel-nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml
             {{- end }}
 
-            {{- if eq $.Necessary.exposeType "Ingress-TCP" }}
-            cat /tmp/sentinel-traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml << EOF
+            {{- if eq $.Necessary.exposeType "traefik" }}
+            cat > /tmp/sentinel-traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
             metadata:
@@ -368,12 +370,14 @@ spec:
                   port: ${PORT}
             EOF
             {{- if eq $.Necessary.handleType "create" }}
-            kubectl apply -f /tmp/sentinel-traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml > /dev/null 2>&1
+            ERROR_OUTPUT=$(kubectl apply -f /tmp/sentinel-traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml 2>&1)
+            EXIT_CODE=$?
             # 如果创建成功，添加到回滚列表
-            if [ $? -eq 0 ]; then
+            if [ $EXIT_CODE -eq 0 ]; then
               add_to_rollback "kubectl delete ingressroutetcp {{ $.Globe.MiddlewareName }}-sentinel-nodeport -n ${NAMESPACE} --ignore-not-found=true"
             else
               echo "Failed to create internal Traefik IngressRouteTCP: {{ $.Globe.MiddlewareName }}-sentinel-nodeport"
+              echo "$ERROR_OUTPUT"
               execute_rollback
               exit 1
             fi
@@ -425,7 +429,7 @@ spec:
                     sentinelAddresses: {
                       {{- if eq .Necessary.handleType "create" }}
                       {{- range $index, $value := .Necessary.sentinelPorts }}
-                      "{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}": {{ $value }}
+                      "{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}": "{{ $value }}"
                       {{- end }}
                       {{- end }}
                     }
