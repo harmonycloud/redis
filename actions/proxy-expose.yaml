@@ -194,6 +194,7 @@ spec:
             EOF
 
             {{- if or (eq $.Necessary.handleType "create") (eq $.Necessary.handleType "update") }}
+            kubectl label svc {{ $.Globe.MiddlewareName }}-predixy middleware.cn/source="actionbaseline" middleware.cn/sourcename="redis-proxy-expose" --overwrite
             ERROR_OUTPUT=$(kubectl apply -f /tmp/traefik-ingress-${MIDDLEWARE_NAME}-predixy-nodeport.yaml 2>&1)
             EXIT_CODE=$?
             # 如果创建成功，添加到回滚列表

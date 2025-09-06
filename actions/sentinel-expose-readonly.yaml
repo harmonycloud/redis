@@ -193,6 +193,7 @@ spec:
             EOF
 
             {{- if or (eq $.Necessary.handleType "create") (eq $.Necessary.handleType "update") }}
+            kubectl label svc {{ $.Globe.MiddlewareName }}-readonly middleware.cn/source="actionbaseline" middleware.cn/sourcename="redis-sentinel-expose-readonly" --overwrite
             ERROR_OUTPUT=$(kubectl apply -f /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml 2>&1)
             EXIT_CODE=$?
             # 如果创建成功，添加到回滚列表
