@@ -194,11 +194,11 @@ spec:
             EOF
 
             {{- if or (eq $.Necessary.handleType "create") (eq $.Necessary.handleType "update") }}
-            kubectl label svc {{ $.Globe.MiddlewareName }}-predixy middleware.cn/source="actionbaseline" middleware.cn/sourcename="redis-proxy-expose" --overwrite
             ERROR_OUTPUT=$(kubectl apply -f /tmp/traefik-ingress-${MIDDLEWARE_NAME}-predixy-nodeport.yaml 2>&1)
             EXIT_CODE=$?
             # 如果创建成功，添加到回滚列表
             if [ $EXIT_CODE -eq 0 ]; then
+              kubectl label svc {{ $.Globe.MiddlewareName }}-predixy -n ${NAMESPACE} middleware.cn/source="actionbaseline" middleware.cn/sourcename="redis-proxy-expose" --overwrite
               add_to_rollback "kubectl delete ingressroutetcp ${MIDDLEWARE_NAME}-predixy-nodeport -n ${NAMESPACE} --ignore-not-found=true"
             else
               echo "Failed to create Traefik IngressRouteTCP: ${MIDDLEWARE_NAME}-predixy-nodeport"
@@ -207,6 +207,7 @@ spec:
               exit 1
             fi
             {{- else if eq $.Necessary.handleType "delete" }}
+            kubectl label svc {{ $.Globe.MiddlewareName }}-predixy -n ${NAMESPACE} middleware.cn/source- middleware.cn/sourcename-
             kubectl delete -f /tmp/traefik-ingress-${MIDDLEWARE_NAME}-predixy-nodeport.yaml > /dev/null 2>&1
             echo "Deleted Traefik IngressRouteTCP: ${MIDDLEWARE_NAME}-predixy-nodeport"
             {{- end }}
