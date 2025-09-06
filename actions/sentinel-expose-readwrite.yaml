@@ -103,6 +103,9 @@ spec:
       cmd:
         command:
           - |
+            # 加载回滚函数
+            source /tmp/rollback-functions.sh
+            
             {{- range $index, $value := .Necessary.ports }}
             NAMESPACE="{{ $.Globe.Namespace }}"
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
