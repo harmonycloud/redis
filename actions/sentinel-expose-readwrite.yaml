@@ -13,7 +13,7 @@ spec:
     handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,update,delete","visible": true, "update": false}' # create、delete
     exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress-TCP","visible": true, "update": false}' # nodePort、traefik
     traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true,"visible": true, "update": false}'
-    ports: '{"type":"expose","label":"ports","required":true,"size":"1","visible": true,"placeholder":"请输入端口号,点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号", "update": true}'# 不固定，根据baseline提供的渲染
+    ports: '{"type":"expose","label":"ports","required":true,"size":"1","visible": true,"placeholder":"请输入端口号，点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号", "update": true}'# 不固定，根据baseline提供的渲染
     protocol: '{"type":"enum","label":"协议","required":true,"options":"TCP","visible": true, "update": false}' # 协议
   steps:
     - name: initRollback
