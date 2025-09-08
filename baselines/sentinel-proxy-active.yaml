@@ -193,7 +193,7 @@ spec:
       rdbScan: { }
       sentinelPort: 9121
     podManagementPolicy: Parallel
-    replicas: "{{ .Necessary.resource.redis.replicas }}"
+    replicas: "{{ div .Necessary.resource.redis.replicas 2 }}"
     servicePort: 6379
     repository: "{{ .Necessary.repository }}/"
     updateStrategy:
@@ -249,4 +249,4 @@ spec:
         predixy:
           enableProxy: '"{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}"'
         redis:
-          replicas: "{{ .Necessary.resource.redis.replicas }}"
+          replicas: "{{ div .Necessary.resource.redis.replicas 2 }}"
