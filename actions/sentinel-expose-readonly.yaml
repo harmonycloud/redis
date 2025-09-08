@@ -213,7 +213,7 @@ spec:
               entryPoints:
               - {{ $.Necessary.traefikName }}-p{{ $value }}
               routes:
-              - match: HostSNI (`*`)
+              - match: HostSNI (\`*\`)
                 services:
                 - name: ${MIDDLEWARE_NAME}-readonly
                   port: ${PORT}

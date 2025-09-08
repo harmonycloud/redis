@@ -343,7 +343,7 @@ spec:
               entryPoints:
               - {{ $.Necessary.traefikName }}-p{{ $value }}
               routes:
-              - match: HostSNI (`*`)
+              - match: HostSNI (\`*\`)
                 services:
                 - name: ${POD_NAME}-pod
                   port: ${PORT}
@@ -462,7 +462,7 @@ spec:
               entryPoints:
               - {{ $.Necessary.traefikName }}-p{{ $value }}
               routes:
-              - match: HostSNI (`*`)
+              - match: HostSNI (\`*\`)
                 services:
                 - name: ${POD_NAME}-pod-16379
                   port: ${PORT}

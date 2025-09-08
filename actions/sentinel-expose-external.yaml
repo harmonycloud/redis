@@ -278,7 +278,7 @@ spec:
               entryPoints:
               - {{ $.Necessary.traefikName }}-p{{ $value }}
               routes:
-              - match: HostSNI (`*`)
+              - match: HostSNI (\`*\`)
                 services:
                 - name: {{ $.Globe.MiddlewareName }}-{{ $index }}-pod
                   port: ${PORT}
@@ -396,7 +396,7 @@ spec:
               entryPoints:
               - {{ $.Necessary.traefikName }}-p{{ $value }}
               routes:
-              - match: HostSNI (`*`)
+              - match: HostSNI (\`*\`)
                 services:
                 - name: {{ $.Globe.MiddlewareName }}-sentinel
                   port: ${PORT}
