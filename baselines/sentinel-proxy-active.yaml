@@ -42,7 +42,6 @@ spec:
         requests:
           cpu: '{"type":"string","label":"CPU","required":true,"description":"请输入自定义配额,单位为Core","placeholder":"请输入自定义配额,单位为Core","default":"2"}'
           memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
-        replicas: '{"type":"int","label":"实例数","required":true,"description":"节点数量","default":1,"pattern":"^[1-9]\\d*$","placeholder":"请输入实例数"}'
   preActions:
     - name: pre-redis-alertrule-labels
       parameters:
@@ -100,7 +99,7 @@ spec:
           memory: 50Mi
       hostNetwork: false
       port: 7617
-      replicas: "{{ .Necessary.resource.predixy.replicas }}"
+      replicas: 3
       resources:
         limits:
           cpu: '"{{ .Necessary.resource.predixy.limits.cpu }}"'
