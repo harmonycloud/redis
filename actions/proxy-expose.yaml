@@ -83,6 +83,29 @@ spec:
             
             echo "Rollback system initialized successfully"
             echo "Rollback file: $ROLLBACK_FILE"
+    - name: updateMiddleware
+      cmd:
+        command:
+          - |
+            NECESSARY_JSON=$(kubectl get mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} -o jsonpath='{.metadata.annotations.middleware\.cn/exposeNecessary}' | base64 -d)
+            if [ -z "$NECESSARY_JSON" ]; then
+              NECESSARY_JSON='{}'
+            fi
+
+            {{- if or (eq .Necessary.handleType "create") (eq .Necessary.handleType "update") }}
+            NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-proxy-expose" = {{ toJson .Necessary }}')
+            {{- else if eq .Necessary.handleType "delete" }}
+            NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-proxy-expose" = null')
+            {{- end }}
+            NECESSARY_JSON_BASE64=$(echo $NECESSARY_JSON | base64 -w 0)
+            kubectl annotate mid {{ .Globe.MiddlewareName }} middleware.cn/exposeNecessary=$NECESSARY_JSON_BASE64 -n {{ .Globe.Namespace }} --overwrite=true
+            {{- if eq .Necessary.handleType "create" }}
+            NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-proxy-expose" = null')
+            {{- else if eq .Necessary.handleType "update" }}
+            NECESSARY_JSON=$(kubectl get mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} -o jsonpath='{.metadata.annotations.middleware\.cn/exposeNecessary}' | base64 -d)
+            {{- end }}
+            NECESSARY_JSON_BASE64=$(echo $NECESSARY_JSON | base64 -w 0)
+            add_to_rollback "kubectl annotate mid {{ .Globe.MiddlewareName }} middleware.cn/exposeNecessary=$NECESSARY_JSON_BASE64 -n {{ .Globe.Namespace }} --overwrite=true"
     - name: getUid
       output:
         type: "string"
@@ -228,19 +251,3 @@ spec:
             # 所有步骤成功完成，清理回滚文件
             cleanup_rollback
             echo "Operation completed successfully!"
-    - name: updateMiddleware
-      cmd:
-        command:
-          - |
-            NECESSARY_JSON=$(kubectl get mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} -o jsonpath='{.metadata.annotations.middleware\.cn/exposeNecessary}' | base64 -d)
-            if [ -z "$NECESSARY_JSON" ]; then
-              NECESSARY_JSON='{}'
-            fi
-
-            {{- if or (eq .Necessary.handleType "create") (eq .Necessary.handleType "update") }}
-            NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-proxy-expose" = {{ toJson .Necessary }}')
-            {{- else if eq .Necessary.handleType "delete" }}
-            NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-proxy-expose" = null')
-            {{- end }}
-            NECESSARY_JSON_BASE64=$(echo $NECESSARY_JSON | base64 -w 0)
-            kubectl annotate mid {{ .Globe.MiddlewareName }} middleware.cn/exposeNecessary=$NECESSARY_JSON_BASE64 -n {{ .Globe.Namespace }} --overwrite=true
