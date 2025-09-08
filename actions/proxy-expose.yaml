@@ -87,6 +87,9 @@ spec:
       cmd:
         command:
           - |
+            # 加载回滚函数
+            source /tmp/rollback-functions.sh
+            
             NECESSARY_JSON=$(kubectl get mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} -o jsonpath='{.metadata.annotations.middleware\.cn/exposeNecessary}' | base64 -d)
             if [ -z "$NECESSARY_JSON" ]; then
               NECESSARY_JSON='{}'
