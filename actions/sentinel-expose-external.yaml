@@ -9,8 +9,9 @@ spec:
   actionType: "expose"
   supportedBaselines:
     - "redis-sentinel"
+    - "redis-sentinel-active"
   necessary:
-    handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,delete","visible": true}' # create、delete
+    handleType: '{"type":"enum","label":"handleType","required":true,"options":"onlyCreate,delete","visible": true}' # create、delete
     exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress-TCP","visible": true}' # nodePort、traefik
     traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true,"visible": true}'
     host: '{"type":"string","label":"负载均衡地址","required":true,"visible": false}' # nodeport主机地址

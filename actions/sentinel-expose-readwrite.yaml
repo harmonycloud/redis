@@ -9,6 +9,7 @@ spec:
   actionType: "expose"
   supportedBaselines:
     - "redis-sentinel"
+    - "redis-sentinel-active"
   necessary:
     handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,update,delete","visible": true, "update": false}' # create、delete
     exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress-TCP","visible": true, "update": false}' # nodePort、traefik
