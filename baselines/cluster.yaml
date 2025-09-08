@@ -63,7 +63,7 @@ spec:
         configmap: "{{ .Globe.Name }}-config"
         env:
           - name: SYS_CODE
-            value: redis
+            value: "{{ .Globe.Name }}"
         labels:
           harmonycloud.cn/statefulset: "{{ .Globe.Name }}"
           middleware: redis
