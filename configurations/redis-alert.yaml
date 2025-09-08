@@ -17,199 +17,350 @@ spec:
         - name: redis-proxy
           rules:
           - alert: MismatchedRequestResponseRate
-            expr: abs(rate(predixy_cluster_total_requests{cluster='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}[5m]) - rate(predixy_cluster_total_respones{cluster='{{ .Globe.Name }}'}[5m])) > 50
-            for: 5m
+            expr: abs(rate(predixy_cluster_total_requests{cluster='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}[5m]) - rate(predixy_cluster_total_respones{cluster='{{ .Globe.Name }}'}[5m])) > {{ .Values.alertRules.MismatchedRequestResponseRate.threshold | default 50 }}
+            for: {{ .Values.alertRules.MismatchedRequestResponseRate.interval | default "5" }}m
             labels:
-              severity: warning
-              project: zeus
-              subject: middleware
-              {{- with .Values.labels }}
-              {{- toYaml . | nindent 10 }}
+              severity: {{ .Values.alertRules.MismatchedRequestResponseRate.alertLevel | default "warning" }}
+              middleware: redis
+              namespace: {{ .Globe.Namespace }}
+              service: {{ .Globe.Name }}
+              {{- if .Values.clusterId }}
+              clusterId: {{ .Values.clusterId }}
               {{- end }}
+              {{ - with .Values.labels }}
+              {{ - toYaml . | nindent 10 }}
+              {{ - end }}
             annotations:
-              message: "Mismatched request/response rate detected on redis proxy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
+              message: "Mismatched request/response rate detected on redis proxy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
               metric: predixy_cluster_total_requests
               product: harmonycloud
               service: metrics
+              {{- if .Values.alertRules.MismatchedRequestResponseRate.silence }}
+              silence: {{ .Values.alertRules.MismatchedRequestResponseRate.silence }}
+              {{- end }}
         {{- end }}
         - name: redis-exporter
           rules:
-          - alert: ReidsExporterDown
+          - alert: RedisExporterDown
             annotations:
-              message: "Redis Exporter is down. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})"
+              message: "Redis Exporter is down. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
               metric: up
               product: harmonycloud
               service: metrics
-            expr: up{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} == 0
-            for: 5m
-            labels:
-              severity: warning
-              project: zeus
-              subject: middleware
-              {{- with .Values.labels }}
-              {{- toYaml . | nindent 10 }}
+              {{- if .Values.alertRules.RedisExporterDown.silence }}
+              silence: {{ .Values.alertRules.RedisExporterDown.silence }}
               {{- end }}
+            expr: up{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} == 0
+            for: {{ .Values.alertRules.RedisExporterDown.interval | default "5" }}m
+            labels:
+              severity: {{ .Values.alertRules.RedisExporterDown.alertLevel | default "warning" }}
+              middleware: redis
+              namespace: {{ .Globe.Namespace }}
+              service: {{ .Globe.Name }}
+              {{- if .Values.clusterId }}
+              clusterId: {{ .Values.clusterId }}
+              {{- end }}
+              {{ - with .Values.labels }}
+              {{ - toYaml . | nindent 10 }}
+              {{ - end }}
         - name: redis-rules
           rules:
             - alert: RedisFailOver
               expr: rate(slave_failover_total{name="{{ .Globe.Name }}",target_namespace={{ .Globe.Namespace | quote }}}[3m]) > 0
-              for: 30s
+              for: {{ .Values.alertRules.RedisFailOver.interval | default "1" }}m
               labels:
-                severity: warning
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                severity: {{ .Values.alertRules.RedisFailOver.alertLevel | default "warning" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
                 {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: "Redis instance failover. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
+                message: "Redis instance failover. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
+                {{- if .Values.alertRules.RedisFailOver.silence }}
+                silence: {{ .Values.alertRules.RedisFailOver.silence }}
+                {{- end }}
+            # 节点不健康
             - alert: RedisUnhealthy
               expr: redis_up{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} < 1 or kube_pod_container_status_running{container="redis-cluster", pod=~'{{ .Globe.Name }}-[0-9]|{{ .Globe.Name }}-shard-[0-9]-[0-9]'} == 0
-              for: 5m
+              for: {{ .Values.alertRules.RedisUnhealthy.interval | default "5" }}m
               labels:
-                severity: warning
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                severity: {{ .Values.alertRules.RedisUnhealthy.alertLevel | default "warning" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
                 {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: "Redis instance is unhealthy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
+                message: "Redis instance is unhealthy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
+                {{- if .Values.alertRules.RedisUnhealthy.silence }}
+                silence: {{ .Values.alertRules.RedisUnhealthy.silence }}
+                {{- end }}
+            # 连接客户端过多
             - alert: RedisLargConnect
-              expr: redis_connected_clients{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} * 100/redis_config_maxclients{service='{{ .Globe.Name }}', namespace="{{ .Globe.Namespace }}"} > 80
-              for: 5m
+              expr: redis_connected_clients{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} * 100/redis_config_maxclients{service='{{ .Globe.Name }}', namespace="{{ .Globe.Namespace }}"} > {{ .Values.alertRules.RedisLargConnect.threshold | default 80 }}
+              for: {{ .Values.alertRules.RedisLargConnect.interval | default "5" }}m
               labels:
-                severity: warning
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                severity: {{ .Values.alertRules.RedisLargConnect.alertLevel | default "warning" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
                 {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: 'Redis client connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis_config_maxclients configuration. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})'
+                message: 'Redis client connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis_config_maxclients configuration. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})'
+                {{- if .Values.alertRules.RedisLargConnect.silence }}
+                silence: {{ .Values.alertRules.RedisLargConnect.silence }}
+                {{- end }}
+            # 连接阻塞过多
             - alert: RedisLargeBlockConnect
-              expr: redis_blocked_clients{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} * 100/redis_connected_clients{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} > 20
-              for: 5m
+              expr: redis_blocked_clients{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} * 100/redis_connected_clients{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} > {{ .Values.alertRules.RedisLargeBlockConnect.threshold | default 20 }}
+              for: {{ .Values.alertRules.RedisLargeBlockConnect.interval | default "5" }}m
               labels:
-                severity: warning
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                severity: {{ .Values.alertRules.RedisLargeBlockConnect.alertLevel | default "warning" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
                 {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: 'Redis block connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis client connections.. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})'
+                message: 'Redis block connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis client connections.. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})'
+                {{- if .Values.alertRules.RedisLargeBlockConnect.silence }}
+                silence: {{ .Values.alertRules.RedisLargeBlockConnect.silence }}
+                {{- end }}
+            # 连接拒绝
+    #        - alert: RedisRejectedConnections
+    #          expr: increase(redis_rejected_connections_total{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}[1m]) > 0
+    #          for: 5m
+    #          labels:
+    #            severity: warning
+    #          annotations:
+    #            message: "Redis instance has some rejected connections, current_value={{ `{{ $value }}` }}. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
+    
+            # 副本数量不正确
             - alert: RedisReplicationBroken
               expr: delta(redis_connected_slaves{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}[3m]) < 0
-              for: 5m
+              for: {{ .Values.alertRules.RedisReplicationBroken.interval | default "5" }}m
               labels:
-                severity: warning
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                severity: {{ .Values.alertRules.RedisReplicationBroken.alertLevel | default "warning" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
                 {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
               annotations:
-                message: "Redis instance lost a slave. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})"
+                message: "Redis instance lost a slave. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
+                {{- if .Values.alertRules.RedisReplicationBroken.silence }}
+                silence: {{ .Values.alertRules.RedisReplicationBroken.silence }}
+                {{- end }}
+            # 备份失败
+    #        - alert: RedisMissingBackup
+    #          expr: time() - redis_rdb_last_save_timestamp_seconds{service='{{ .Globe.Name }}'} > 60 * 60 * 24
+    #          for: 0m
+    #          labels:
+    #            severity: critical
+    #          annotations:
+    #            summary: Redis missing backup (instance {{`{{ $labels.instance }}`}})
+    #            description: Redis has not been backuped for 24 hours\n  VALUE = {{`{{ $value }}`}}\n  LABELS {{`{ { $labels } }`}}
+            # 内存过高
             - alert: RedisOutOfConfiguredMaxmemory
-              expr:  (redis_memory_used_bytes{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} * 100 / redis_memory_max_bytes{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}) > 90 and redis_memory_max_bytes{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}!=0
-              for: 5m
+              expr:  (redis_memory_used_bytes{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} * 100 / redis_memory_max_bytes{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}) > {{ .Values.alertRules.RedisOutOfConfiguredMaxmemory.threshold | default 90 }}
+              for: {{ .Values.alertRules.RedisOutOfConfiguredMaxmemory.interval | default "5" }}m
               labels:
-                severity: warning
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                severity: {{ .Values.alertRules.RedisOutOfConfiguredMaxmemory.alertLevel | default "warning" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
                 {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
               annotations:
-                message: 'Redis is running out of configured maxmemory (> current_value={{ `{{ printf "%.0f" $value }}` }}%). (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})'
-            - alert: RedisVolumeUsage70
-              expr:  (100 * kube_persistentvolumeclaim_info{namespace='{{ .Globe.Namespace }}', persistentvolumeclaim=~"redis-data-{{ .Globe.Name }}.*"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > 70
-              for: 5m
-              labels:
-                severity: warning
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                message: 'Redis is running out of configured maxmemory (> current_value={{ `{{ printf "%.0f" $value }}` }}%). (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+                {{- if .Values.alertRules.RedisOutOfConfiguredMaxmemory.silence }}
+                silence: {{ .Values.alertRules.RedisOutOfConfiguredMaxmemory.silence }}
                 {{- end }}
-              annotations:
-                product: harmonycloud
-                message: 'The disk usage of Redis has exceeded 70%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
-            - alert: RedisVolumeUsage85
-              expr:  (100 * kube_persistentvolumeclaim_info{namespace='{{ .Globe.Namespace }}', persistentvolumeclaim=~"redis-data-{{ .Globe.Name }}.*"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > 85
-              for: 5m
+            - alert: RedisVolumeUsageMinor
+              expr:  (100 * kube_persistentvolumeclaim_info{namespace='{{ .Globe.Namespace }}', persistentvolumeclaim=~"redis-data-{{ .Globe.Name }}.*"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > {{ .Values.alertRules.RedisVolumeUsageMinor.threshold | default 70 }}
+              for: {{ .Values.alertRules.RedisVolumeUsageMinor.interval | default "5" }}m
               labels:
-                severity: critical
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                severity: {{ .Values.alertRules.RedisVolumeUsageMinor.alertLevel | default "warning" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
                 {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
               annotations:
                 product: harmonycloud
-                message: 'The disk usage of Redis has exceeded 85%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+                message: 'The disk usage of Redis has exceeded {{ .Values.alertRules.RedisVolumeUsageMinor.threshold | default 70 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+                {{- if .Values.alertRules.RedisVolumeUsageMinor.silence }}
+                silence: {{ .Values.alertRules.RedisVolumeUsageMinor.silence }}
+                {{- end }}
+            - alert: RedisVolumeUsageMajor
+              expr:  (100 * kube_persistentvolumeclaim_info{namespace='{{ .Globe.Namespace }}', persistentvolumeclaim=~"redis-data-{{ .Globe.Name }}.*"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > {{ .Values.alertRules.RedisVolumeUsageMajor.threshold | default 85 }}
+              for: {{ .Values.alertRules.RedisVolumeUsageMajor.interval | default "5" }}m
+              labels:
+                severity: {{ .Values.alertRules.RedisVolumeUsageMajor.alertLevel | default "critical" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
+                {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
+              annotations:
+                product: harmonycloud
+                message: 'The disk usage of Redis has exceeded {{ .Values.alertRules.RedisVolumeUsageMajor.threshold | default 85 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+                {{- if .Values.alertRules.RedisVolumeUsageMajor.silence }}
+                silence: {{ .Values.alertRules.RedisVolumeUsageMajor.silence }}
+                {{- end }}
             - alert: RedsMemoryUsageHigh
               annotations:
-                message: 'The memory usage of Redis has exceeded 90%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})'
-              expr: 100 * sum(container_memory_working_set_bytes{namespace='{{ .Globe.Namespace }}',pod=~'{{ .Globe.Name }}-[0-9]|{{ .Globe.Name }}-shard-[0-9]-[0-9]',endpoint!="",container!=""}) by (pod) / sum(kube_pod_container_resource_requests{namespace='{{ .Globe.Namespace }}',pod=~'{{ .Globe.Name }}-[0-9]|{{ .Globe.Name }}-shard-[0-9]-[0-9]',resource="memory"}) by (pod) > 90
-              for: 5m
-              labels:
-                severity: warning
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                message: 'The memory usage of Redis has exceeded {{ .Values.alertRules.RedsMemoryUsageHigh.threshold | default 90 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+                {{- if .Values.alertRules.RedsMemoryUsageHigh.silence }}
+                silence: {{ .Values.alertRules.RedsMemoryUsageHigh.silence }}
                 {{- end }}
+              expr: 100 * sum(container_memory_working_set_bytes{namespace='{{ .Globe.Namespace }}',pod=~'{{ .Globe.Name }}-[0-9]|{{ .Globe.Name }}-shard-[0-9]-[0-9]',endpoint!="",container!=""}) by (pod) / sum(kube_pod_container_resource_requests{namespace='{{ .Globe.Namespace }}',pod=~'{{ .Globe.Name }}-[0-9]|{{ .Globe.Name }}-shard-[0-9]-[0-9]',resource="memory"}) by (pod) > {{ .Values.alertRules.RedsMemoryUsageHigh.threshold | default 90 }}
+              for: {{ .Values.alertRules.RedsMemoryUsageHigh.interval | default "5" }}m
+              labels:
+                severity: {{ .Values.alertRules.RedsMemoryUsageHigh.alertLevel | default "warning" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
+                {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
             - alert: RedisCpuUsageHigh
               annotations:
-                message: 'The cpu usage of Redis has exceeded 90%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})'
-              expr: 100 * sum(rate (container_cpu_usage_seconds_total{namespace='{{ .Globe.Namespace }}',pod=~'{{ .Globe.Name }}-[0-9]|{{ .Globe.Name }}-shard-[0-9]-[0-9]',endpoint!="",container!=""}[5m]) ) by (pod) / sum(kube_pod_container_resource_requests{namespace='{{ .Globe.Namespace }}',pod=~'{{ .Globe.Name }}-[0-9]|{{ .Globe.Name }}-shard-[0-9]-[0-9]',resource="cpu"}) by (pod)  > 90
-              for: 5m
-              labels:
-                severity: warning
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                message: 'The cpu usage of Redis has exceeded {{ .Values.alertRules.RedisCpuUsageHigh.threshold | default 90 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+                {{- if .Values.alertRules.RedisCpuUsageHigh.silence }}
+                silence: {{ .Values.alertRules.RedisCpuUsageHigh.silence }}
                 {{- end }}
+              expr: 100 * sum(rate (container_cpu_usage_seconds_total{namespace='{{ .Globe.Namespace }}',pod=~'{{ .Globe.Name }}-[0-9]|{{ .Globe.Name }}-shard-[0-9]-[0-9]',endpoint!="",container!=""}[5m]) ) by (pod) / sum(kube_pod_container_resource_requests{namespace='{{ .Globe.Namespace }}',pod=~'{{ .Globe.Name }}-[0-9]|{{ .Globe.Name }}-shard-[0-9]-[0-9]',resource="cpu"}) by (pod)  > {{ .Values.alertRules.RedisCpuUsageHigh.threshold | default 90 }}
+              for: {{ .Values.alertRules.RedisCpuUsageHigh.interval | default "5" }}m
+              labels:
+                severity: {{ .Values.alertRules.RedisCpuUsageHigh.alertLevel | default "warning" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
+                {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
+    
         {{- if eq .Values.type "sentinel" }}
         - name: redis-sentinel
           rules:
+            # 哨兵监控的master不正常
             - alert: RedisSentinelWatchNodeUnhealthy
               expr: redis_sentinel_master_status{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"} == 0
-              for: 5m
+              for: {{ .Values.alertRules.RedisSentinelWatchNodeUnhealthy.interval | default "5" }}m
               labels:
-                severity: critical
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                severity: {{ .Values.alertRules.RedisSentinelWatchNodeUnhealthy.alertLevel | default "critical" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
                 {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: "Redis master node monitored by the sentinel is unhealthy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
+                message: "Redis master node monitored by the sentinel is unhealthy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
+                {{- if .Values.alertRules.RedisSentinelWatchNodeUnhealthy.silence }}
+                silence: {{ .Values.alertRules.RedisSentinelWatchNodeUnhealthy.silence }}
+                {{- end }}
+            # 哨兵数量不对
             - alert: RedisSentries_num
               expr: redis_sentinel_master_sentinels{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}%2 == 0
-              for: 5m
+              for: {{ .Values.alertRules.RedisSentries_num.interval | default "5" }}m
               labels:
-                severity: warning
-                project: zeus
-                subject: middleware
-                {{- with .Values.labels }}
-                {{- toYaml . | nindent 12 }}
+                severity: {{ .Values.alertRules.RedisSentries_num.alertLevel | default "warning" }}
+                middleware: redis
+                namespace: {{ .Globe.Namespace }}
+                service: {{ .Globe.Name }}
+                {{- if .Values.clusterId }}
+                clusterId: {{ .Values.clusterId }}
                 {{- end }}
+                {{ - with .Values.labels }}
+                {{ - toYaml . | nindent 12 }}
+                {{ - end }}
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: "Redis sentinel num is not right,  current_value={{ `{{ $value }}` }}. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
+                message: "Redis sentinel num is not right,  current_value={{ `{{ $value }}` }}. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
+                {{- if .Values.alertRules.RedisSentries_num.silence }}
+                silence: {{ .Values.alertRules.RedisSentries_num.silence }}
+                {{- end }}
+        {{- end }}
+    
+        {{- if .Values.customAlertRules }}
+        - name: custom-alert-rules
+          rules:
+          {{ $namespace := .Globe.Namespace }}
+          {{- range $name, $rule := .Values.customAlertRules }}
+          - alert: {{ $name }}
+            expr: {{ $rule.alertExpr }}
+            for: {{ $rule.interval | default "5" }}m
+            labels:
+              severity: {{ $rule.alertLevel | default "warning" }}
+              middleware: redis
+              namespace: {{ $namespace }}
+              service: {{ include "redis.fullname" $ }}
+              {{- if $.Values.clusterId }}
+              clusterId: {{ $.Values.clusterId }}
+              {{- end }}
+              {{ - with .Values.labels }}
+              {{ - toYaml . | nindent 10 }}
+              {{ - end }}
+            annotations:
+              message: '{{ $rule.alertText }}'
+              {{- if $rule.silence }}
+              silence: {{ $rule.silence }}
+              {{- end }}
+          {{- end }}
         {{- end }}
