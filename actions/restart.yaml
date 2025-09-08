@@ -5,9 +5,7 @@ metadata:
 spec:
   baselineType: "NormalAction"
   actionType: "restart"
-  necessary:
-    namespace: "string"
-    middlewareName: "string"
+  necessary: {}
   steps:
     - name: isPredixy
       output:
@@ -19,7 +17,7 @@ spec:
           - "get"
           - "rec"
           - "-n"
-          - "{{ .Necessary.namespace }}"
+          - "{{ .Globe.Namespace }}"
           - "{{ .Globe.MiddlewareName }}"
           - "-o"
           - "jsonpath='{.spec.predixy}'"
@@ -34,7 +32,18 @@ spec:
           - "redisCluster"
           - "{{ .Globe.MiddlewareName }}"
           - "-n"
-          - "{{ .Necessary.namespace }}"
+          - "{{ .Globe.Namespace }}"
           - "--type=merge"
           - "-p"
-          - '''{"metadata":{"annotations":{"middleware.maintenance.lock":"graceful-restart"{{ if eq .Step.isPredixy.output "predixy" }},"middleware.maintenance.component":"predixy"{{ end }}}}}'''
+          - '''{"metadata":{"annotations":{"middleware.maintenance.lock":"graceful-restart"}}}'''
+    - name: waitForReady
+      output:
+        type: "string"
+        expose: false
+      cmd:
+        command:
+          - '{{ if eq .Step.isPredixy.output "predixy" }}i=0; while [ $i -lt 60 ] && kubectl get redisCluster -n {{ .Globe.Namespace }} {{ .Globe.MiddlewareName }} -o yaml 2>/dev/null | grep -q "middleware.maintenance.lock:"; do i=$((i+1)); echo "第 $i 次检查，维护锁存在"; sleep 1; done; echo "完成"{{ else }}echo 1{{ end }}'
+    - name: restartPredixy
+      cmd:
+        command:
+          - '{{ if eq .Step.isPredixy.output "predixy" }}kubectl annotate redisCluster -n {{ .Globe.Namespace }} {{ .Globe.MiddlewareName }} middleware.maintenance.lock=graceful-restart middleware.maintenance.component=predixy -overwrite=true{{ else }}echo 1{{ end }}'
