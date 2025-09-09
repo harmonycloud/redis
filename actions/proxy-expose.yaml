@@ -10,6 +10,7 @@ spec:
   supportedBaselines:
     - "redis-sentinel-proxy"
     - "redis-cluster-proxy"
+    - "redis-sentinel-proxy-active"
   necessary:
     handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,update,delete","visible": true}' # create、delete
     exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress-TCP","visible": true}' # nodePort、traefik
