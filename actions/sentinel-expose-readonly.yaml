@@ -140,7 +140,7 @@ spec:
             PROTOCOL="{{ $.Necessary.protocol }}"
             PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-readonly -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].port}')
             TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-readonly -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
-            SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }} -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
+            SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-readonly -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
 
             {{- if eq $.Necessary.exposeType "NodePort" }}
             cat > /tmp/nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
