@@ -31,7 +31,7 @@ spec:
               {{- toYaml . | nindent 10 }}
               {{- end }}
             annotations:
-              message: "Mismatched request/response rate detected on redis proxy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
+              message: "Mismatched request/response rate detected on redis proxy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
               metric: predixy_cluster_total_requests
               product: harmonycloud
               service: metrics
@@ -43,7 +43,7 @@ spec:
           rules:
           - alert: RedisExporterDown
             annotations:
-              message: "Redis Exporter is down. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
+              message: "Redis Exporter is down. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})"
               metric: up
               product: harmonycloud
               service: metrics
@@ -82,7 +82,7 @@ spec:
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: "Redis instance failover. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
+                message: "Redis instance failover. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
                 {{- if .Values.alertRules.RedisFailOver.silence }}
                 silence: {{ .Values.alertRules.RedisFailOver.silence }}
                 {{- end }}
@@ -104,7 +104,7 @@ spec:
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: "Redis instance is unhealthy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
+                message: "Redis instance is unhealthy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
                 {{- if .Values.alertRules.RedisUnhealthy.silence }}
                 silence: {{ .Values.alertRules.RedisUnhealthy.silence }}
                 {{- end }}
@@ -126,7 +126,7 @@ spec:
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: 'Redis client connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis_config_maxclients configuration. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})'
+                message: 'Redis client connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis_config_maxclients configuration. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})'
                 {{- if .Values.alertRules.RedisLargConnect.silence }}
                 silence: {{ .Values.alertRules.RedisLargConnect.silence }}
                 {{- end }}
@@ -148,7 +148,7 @@ spec:
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: 'Redis block connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis client connections.. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})'
+                message: 'Redis block connections account for {{ `{{ printf "%.0f" $value }}` }}% of the redis client connections.. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})'
                 {{- if .Values.alertRules.RedisLargeBlockConnect.silence }}
                 silence: {{ .Values.alertRules.RedisLargeBlockConnect.silence }}
                 {{- end }}
@@ -159,7 +159,7 @@ spec:
     #          labels:
     #            severity: warning
     #          annotations:
-    #            message: "Redis instance has some rejected connections, current_value={{ `{{ $value }}` }}. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
+    #            message: "Redis instance has some rejected connections, current_value={{ `{{ $value }}` }}. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
 
             # 副本数量不正确
             - alert: RedisReplicationBroken
@@ -177,7 +177,7 @@ spec:
                 {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
-                message: "Redis instance lost a slave. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
+                message: "Redis instance lost a slave. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})"
                 {{- if .Values.alertRules.RedisReplicationBroken.silence }}
                 silence: {{ .Values.alertRules.RedisReplicationBroken.silence }}
                 {{- end }}
@@ -206,7 +206,7 @@ spec:
                 {{- toYaml . | nindent 12 }}
                 {{- end }}
               annotations:
-                message: 'Redis is running out of configured maxmemory (> current_value={{ `{{ printf "%.0f" $value }}` }}%). (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+                message: 'Redis is running out of configured maxmemory (> current_value={{ `{{ printf "%.0f" $value }}` }}%). (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})'
                 {{- if .Values.alertRules.RedisOutOfConfiguredMaxmemory.silence }}
                 silence: {{ .Values.alertRules.RedisOutOfConfiguredMaxmemory.silence }}
                 {{- end }}
@@ -226,7 +226,7 @@ spec:
                 {{- end }}
               annotations:
                 product: harmonycloud
-                message: 'The disk usage of Redis has exceeded {{ .Values.alertRules.RedisVolumeUsageMinor.threshold | default 70 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+                message: 'The disk usage of Redis has exceeded {{ .Values.alertRules.RedisVolumeUsageMinor.threshold | default 70 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
                 {{- if .Values.alertRules.RedisVolumeUsageMinor.silence }}
                 silence: {{ .Values.alertRules.RedisVolumeUsageMinor.silence }}
                 {{- end }}
@@ -246,13 +246,13 @@ spec:
                 {{- end }}
               annotations:
                 product: harmonycloud
-                message: 'The disk usage of Redis has exceeded {{ .Values.alertRules.RedisVolumeUsageMajor.threshold | default 85 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+                message: 'The disk usage of Redis has exceeded {{ .Values.alertRules.RedisVolumeUsageMajor.threshold | default 85 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
                 {{- if .Values.alertRules.RedisVolumeUsageMajor.silence }}
                 silence: {{ .Values.alertRules.RedisVolumeUsageMajor.silence }}
                 {{- end }}
             - alert: RedsMemoryUsageHigh
               annotations:
-                message: 'The memory usage of Redis has exceeded {{ .Values.alertRules.RedsMemoryUsageHigh.threshold | default 90 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+                message: 'The memory usage of Redis has exceeded {{ .Values.alertRules.RedsMemoryUsageHigh.threshold | default 90 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})'
                 {{- if .Values.alertRules.RedsMemoryUsageHigh.silence }}
                 silence: {{ .Values.alertRules.RedsMemoryUsageHigh.silence }}
                 {{- end }}
@@ -271,7 +271,7 @@ spec:
                 {{- end }}
             - alert: RedisCpuUsageHigh
               annotations:
-                message: 'The cpu usage of Redis has exceeded {{ .Values.alertRules.RedisCpuUsageHigh.threshold | default 90 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+                message: 'The cpu usage of Redis has exceeded {{ .Values.alertRules.RedisCpuUsageHigh.threshold | default 90 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }}, Pod: {{`{{ $labels.pod }}`}})'
                 {{- if .Values.alertRules.RedisCpuUsageHigh.silence }}
                 silence: {{ .Values.alertRules.RedisCpuUsageHigh.silence }}
                 {{- end }}
@@ -310,7 +310,7 @@ spec:
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: "Redis master node monitored by the sentinel is unhealthy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
+                message: "Redis master node monitored by the sentinel is unhealthy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
                 {{- if .Values.alertRules.RedisSentinelWatchNodeUnhealthy.silence }}
                 silence: {{ .Values.alertRules.RedisSentinelWatchNodeUnhealthy.silence }}
                 {{- end }}
@@ -332,7 +332,7 @@ spec:
               annotations:
                 product: harmonycloud
                 service: metrics
-                message: "Redis sentinel num is not right,  current_value={{ `{{ $value }}` }}. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
+                message: "Redis sentinel num is not right,  current_value={{ `{{ $value }}` }}. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Globe.Name }})"
                 {{- if .Values.alertRules.RedisSentries_num.silence }}
                 silence: {{ .Values.alertRules.RedisSentries_num.silence }}
                 {{- end }}
