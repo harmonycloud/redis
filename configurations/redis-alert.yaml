@@ -27,9 +27,9 @@ spec:
               {{- if .Values.clusterId }}
               clusterId: {{ .Values.clusterId }}
               {{- end }}
-              {{ - with .Values.labels }}
-              {{ - toYaml . | nindent 10 }}
-              {{ - end }}
+              {{- with .Values.labels }}
+              {{- toYaml . | nindent 10 }}
+              {{- end }}
             annotations:
               message: "Mismatched request/response rate detected on redis proxy. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
               metric: predixy_cluster_total_requests
@@ -60,9 +60,9 @@ spec:
               {{- if .Values.clusterId }}
               clusterId: {{ .Values.clusterId }}
               {{- end }}
-              {{ - with .Values.labels }}
-              {{ - toYaml . | nindent 10 }}
-              {{ - end }}
+              {{- with .Values.labels }}
+              {{- toYaml . | nindent 10 }}
+              {{- end }}
         - name: redis-rules
           rules:
             - alert: RedisFailOver
@@ -76,9 +76,9 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
@@ -98,9 +98,9 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
@@ -120,9 +120,9 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
@@ -142,9 +142,9 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
@@ -160,7 +160,7 @@ spec:
     #            severity: warning
     #          annotations:
     #            message: "Redis instance has some rejected connections, current_value={{ `{{ $value }}` }}. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }})"
-    
+
             # 副本数量不正确
             - alert: RedisReplicationBroken
               expr: delta(redis_connected_slaves{service='{{ .Globe.Name }}',namespace="{{ .Globe.Namespace }}"}[3m]) < 0
@@ -173,9 +173,9 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
               annotations:
                 message: "Redis instance lost a slave. (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
                 {{- if .Values.alertRules.RedisReplicationBroken.silence }}
@@ -202,9 +202,9 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
               annotations:
                 message: 'Redis is running out of configured maxmemory (> current_value={{ `{{ printf "%.0f" $value }}` }}%). (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
                 {{- if .Values.alertRules.RedisOutOfConfiguredMaxmemory.silence }}
@@ -221,9 +221,9 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 message: 'The disk usage of Redis has exceeded {{ .Values.alertRules.RedisVolumeUsageMinor.threshold | default 70 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
@@ -241,9 +241,9 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 message: 'The disk usage of Redis has exceeded {{ .Values.alertRules.RedisVolumeUsageMajor.threshold | default 85 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
@@ -266,9 +266,9 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
             - alert: RedisCpuUsageHigh
               annotations:
                 message: 'The cpu usage of Redis has exceeded {{ .Values.alertRules.RedisCpuUsageHigh.threshold | default 90 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Globe.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
@@ -285,10 +285,10 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
-    
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
+
         {{- if eq .Values.type "sentinel" }}
         - name: redis-sentinel
           rules:
@@ -304,9 +304,9 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
@@ -326,9 +326,9 @@ spec:
                 {{- if .Values.clusterId }}
                 clusterId: {{ .Values.clusterId }}
                 {{- end }}
-                {{ - with .Values.labels }}
-                {{ - toYaml . | nindent 12 }}
-                {{ - end }}
+                {{- with .Values.labels }}
+                {{- toYaml . | nindent 12 }}
+                {{- end }}
               annotations:
                 product: harmonycloud
                 service: metrics
@@ -337,7 +337,7 @@ spec:
                 silence: {{ .Values.alertRules.RedisSentries_num.silence }}
                 {{- end }}
         {{- end }}
-    
+
         {{- if .Values.customAlertRules }}
         - name: custom-alert-rules
           rules:
@@ -354,9 +354,9 @@ spec:
               {{- if $.Values.clusterId }}
               clusterId: {{ $.Values.clusterId }}
               {{- end }}
-              {{ - with .Values.labels }}
-              {{ - toYaml . | nindent 10 }}
-              {{ - end }}
+              {{- with .Values.labels }}
+              {{- toYaml . | nindent 10 }}
+              {{- end }}
             annotations:
               message: '{{ $rule.alertText }}'
               {{- if $rule.silence }}
