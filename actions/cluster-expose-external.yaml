@@ -96,7 +96,7 @@ spec:
               NECESSARY_JSON='{}'
             fi
 
-            {{- if eq .Necessary.handleType "create" }}
+            {{- if or (eq .Necessary.handleType "create") (eq .Necessary.handleType "update") }}
             NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-cluster-expose-external" = {{ toJson .Necessary }}')
             {{- else if eq .Necessary.handleType "delete" }}
             NECESSARY_JSON=$(echo $NECESSARY_JSON | jq '."redis-cluster-expose-external" = null')
