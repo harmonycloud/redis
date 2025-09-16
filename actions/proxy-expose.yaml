@@ -13,7 +13,7 @@ spec:
     - "redis-sentinel-proxy-active"
   necessary:
     handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,update,delete","visible": true}' # create、delete
-    exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress-TCP","visible": true}' # nodePort、traefik
+    exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress","visible": true}' # nodePort、traefik
     traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true,"visible": true}'
     ports: '{"type":"expose","label":"ports","required":true,"size":"1","visible": true,"placeholder":"请输入端口号，点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号", "update": true}'# 不固定，根据baseline提供的渲染
     protocol: '{"type":"enum","label":"协议","required":true,"options":"TCP","visible": true}' # 协议
@@ -198,7 +198,7 @@ spec:
             rm -f /tmp/nodeport-service-${MIDDLEWARE_NAME}-predixy-nodeport.yaml
             {{- end }}
 
-            {{- if eq $.Necessary.exposeType "Ingress-TCP" }}
+            {{- if eq $.Necessary.exposeType "Ingress" }}
             cat > /tmp/traefik-ingress-${MIDDLEWARE_NAME}-predixy-nodeport.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP

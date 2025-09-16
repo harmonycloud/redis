@@ -11,7 +11,7 @@ spec:
     - "redis-cluster"
   necessary:
     handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,delete","visible": true}' # create、delete
-    exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress-TCP","visible": true}' # nodePort、 traefik
+    exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress","visible": true}' # nodePort、 traefik
     traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true,"visible": true}'
     host: '{"type":"string","label":"负载均衡地址","required":true,"visible": false}' # nodeport主机地址
     ports: '{"type":"expose","label":"ports","required":true,"ref":"master*1,slave*1,","size":"1","visible": true,"placeholder":"请输入端口号，点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号"}' # 不固定，根据baseline提供的渲染
@@ -329,7 +329,7 @@ spec:
             rm -f /tmp/nodeport-service-${POD_NAME}.yaml
             {{- end }}
 
-            {{- if eq $.Necessary.exposeType "Ingress-TCP" }}
+            {{- if eq $.Necessary.exposeType "Ingress" }}
             # 创建Traefik IngressRouteTCP的YAML内容
             cat > /tmp/traefik-ingress-${POD_NAME}.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
@@ -448,7 +448,7 @@ spec:
             rm -f /tmp/internal-nodeport-service-${POD_NAME}.yaml
             {{- end }}
 
-            {{- if eq $.Necessary.exposeType "Ingress-TCP" }}
+            {{- if eq $.Necessary.exposeType "Ingress" }}
             # 创建内部Traefik IngressRouteTCP的YAML内容
             cat > /tmp/internal-traefik-ingress-${POD_NAME}.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
