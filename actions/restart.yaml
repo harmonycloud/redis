@@ -42,7 +42,7 @@ spec:
         expose: false
       cmd:
         command:
-          - '{{ if eq .Step.isPredixy.output "predixy" }}i=0; while [ $i -lt 60 ] && kubectl get redisCluster -n {{ .Globe.Namespace }} {{ .Globe.MiddlewareName }} -o yaml 2>/dev/null | grep -q "middleware.maintenance.lock:"; do i=$((i+1)); echo "第 $i 次检查，维护锁存在"; sleep 1; done; echo "完成"{{ else }}echo 1{{ end }}'
+          - '{{ if eq .Step.isPredixy.output "predixy" }}i=0; while [ $i -lt 60 ] && kubectl get redisCluster -n {{ .Globe.Namespace }} {{ .Globe.MiddlewareName }} -o yaml 2>/dev/null | grep -q "middleware.maintenance.lock:"; do i=$((i+1)); echo "第 $i 次检查，维护锁存在"; sleep 10; done; echo "完成"{{ else }}echo 1{{ end }}'
     - name: restartPredixy
       cmd:
         command:
