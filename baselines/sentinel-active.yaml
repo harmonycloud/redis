@@ -16,7 +16,16 @@ spec:
   necessary:
     repository: ""
     version: '{"type":"version","label":"版本","required":true,"default":"7.2.8"}'
-    password: '{"type":"password","label":"管理员账号密码","required":true,"description":"管理员的初始密码","placeholder":"输入管理员账户密码","default":"Hc@Cloud01"}'
+    password: |
+      {
+        "type": "password",
+        "label": "管理员账号密码",
+        "required": true,
+        "description": "请输入由英文字母、数字或特殊字符“/、~、%、_、.”组成的密码信息",
+        "placeholder": "输入管理员账户密码",
+        "default": "Hc@Cloud01",
+        "pattern": "^[^!&|;$\\'\"><*?`(){}@#]*$"
+       }
     resource:
       redis:
         limits:
