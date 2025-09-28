@@ -3,7 +3,7 @@ kind: MiddlewareActionBaseline
 metadata:
   name: redis-cluster-expose-external
   annotations:
-    alias: "集群外访问"
+    alias: "服务暴露-集群外访问"
 spec:
   baselineType: "NormalAction"
   actionType: "expose"
