@@ -3,7 +3,7 @@ kind: MiddlewareActionBaseline
 metadata:
   name: redis-sentinel-expose-external
   annotations:
-    alias: "哨兵"
+    alias: "服务暴露-哨兵"
 spec:
   baselineType: "NormalAction"
   actionType: "expose"

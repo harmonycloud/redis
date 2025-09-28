@@ -3,7 +3,7 @@ kind: MiddlewareActionBaseline
 metadata:
   name: redis-proxy-expose
   annotations:
-    alias: "读写分离"
+    alias: "服务暴露-读写分离"
 spec:
   baselineType: "NormalAction"
   actionType: "expose"

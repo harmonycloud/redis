@@ -3,7 +3,7 @@ kind: MiddlewareActionBaseline
 metadata:
   name: redis-sentinel-expose-readonly
   annotations:
-    alias: "只读"
+    alias: "服务暴露-只读"
 spec:
   baselineType: "NormalAction"
   actionType: "expose"
