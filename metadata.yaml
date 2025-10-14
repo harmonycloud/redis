@@ -1,5 +1,5 @@
 name: Redis # 中间件类型
-version: 2.17.2-1.2.0
+version: 2.17.2-1.3.0
 app:
   version: # 中间件支持版本
     - "7.2.10"
@@ -13,3 +13,6 @@ owner: harmonycloud # 供应商
 type: db # 类型
 chartType: Redis
 description: Redis 缓存数据库
+changes: |
+  2.17.2-1.3.0
+    2025.10.14: 修改双活模式命名
