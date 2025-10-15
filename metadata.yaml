@@ -16,3 +16,4 @@ description: Redis 缓存数据库
 changes: |
   2.17.2-1.3.0
     2025.10.14: 修改双活模式命名
+    2025.10.15: 修复dashboard-configmap.yaml中配置缺失的问题
