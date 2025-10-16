@@ -662,7 +662,9 @@ spec:
           "timezone": "",
           "title": "Redis Proxy",
           "uid": "dHlrS1PVz",
-          "version": 1
+          "version": 1,
+          "dataServiceSort" 2,
+          "supportedBaselines": [ "redis-cluster-proxy", "redis-sentinel-active", "redis-sentinel-proxy", "redis-sentinel-proxy-active"]
         }
       Redis.json: |-
         {
@@ -3206,5 +3208,7 @@ spec:
           "timezone": "",
           "title": "Redis cluster",
           "uid": "2hfoTb2Vz",
-          "version": 2
+          "version": 2,
+          "dataServiceSort" 1,
+          "supportedBaselines": ["redis-cluster", "redis-cluster-proxy", "redis-sentinel", "redis-sentinel-active", "redis-sentinel-proxy", "redis-sentinel-proxy-active"]
         }
