@@ -46,6 +46,12 @@ spec:
           memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
         replicas: '{"type":"int","label":"实例数","required":true,"description":"当前输入的实例数不符合规范，实例数最低为1，请调整后再次提交","default":3,"pattern":"^[1-9]\\d*$","placeholder":"请输入实例数"}'
   preActions:
+    - name: pre-redis-heimdallr-hdpool
+      parameters:
+        networkCardList: []
+        annotations: {}
+      fixed: false
+      exposed: true
     - name: pre-redis-alertrule-labels
       parameters:
         labels: {}

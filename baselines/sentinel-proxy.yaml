@@ -53,6 +53,12 @@ spec:
           cpu: '{"type":"string","label":"CPU","required":true,"description":"请输入自定义配额,单位为Core","placeholder":"请输入自定义配额,单位为Core","default":"2"}'
           memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
   preActions:
+    - name: pre-redis-heimdallr-hdpool
+      parameters:
+        networkCardList: []
+        annotations: {}
+      fixed: false
+      exposed: true
     - name: pre-redis-alertrule-labels
       parameters:
         labels: {}

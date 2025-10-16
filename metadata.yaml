@@ -18,4 +18,5 @@ changes: |
     2025.10.14: 修改双活模式命名
     2025.10.15: 修复dashboard-configmap.yaml中配置缺失的问题
     2025.10.16: dashboard-configmap.yaml中监控面板绑定基线，设置排序
-    2025.10.17: 添加随机ip池
+                添加随机ip池
+                operator默认推荐资源规格
