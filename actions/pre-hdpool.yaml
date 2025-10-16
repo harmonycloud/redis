@@ -1,0 +1,49 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareActionBaseline
+metadata:
+  name: pre-redis-heimdallr-hdpool
+spec:
+  baselineType: "PreAction"
+  actionType: "hdpool"
+  necessary:
+    networkCardList: []
+    annotations: {}
+  steps:
+    - name: hdpool
+      type: "KubectlEdit" # KubectlGet、KubectlEdit、KubectlExec、Exec、HTTP
+      cue: |
+        output: {
+          spec: parameters.spec
+        }
+        parameters: {
+          spec: {
+            parameters: {
+              {{- if .Necessary.annotation }}
+              statefulset: {
+                spec: {
+                  template: {
+                    metadata: {
+                      annotations: {{ toCue .Necessary.annotations }}
+                    }
+                  }
+                }
+              },
+              deployment: {
+                spec: {
+                  template: {
+                    metadata: {
+                      annotations: {{ toCue .Necessary.annotations }}
+                    }
+                  }
+                }
+              }
+              {{- end }}
+            }
+          }
+          resource: {
+            apiversion: "middleware.cn/v1"
+            kind: "Middleware"
+            name: "{{ .Globe.Name }}"
+            namespace: "{{ .Globe.Namespace }}"
+          }
+        }
