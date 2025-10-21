@@ -663,7 +663,7 @@ spec:
           "title": "Redis Proxy",
           "uid": "dHlrS1PVz",
           "version": 1,
-          "dataServiceSort" 2,
+          "dataServiceSort": 2,
           "supportedBaselines": [ "redis-cluster-proxy", "redis-sentinel-active", "redis-sentinel-proxy", "redis-sentinel-proxy-active"]
         }
       Redis.json: |-
@@ -3209,6 +3209,6 @@ spec:
           "title": "Redis cluster",
           "uid": "2hfoTb2Vz",
           "version": 2,
-          "dataServiceSort" 1,
+          "dataServiceSort": 1,
           "supportedBaselines": ["redis-cluster", "redis-cluster-proxy", "redis-sentinel", "redis-sentinel-active", "redis-sentinel-proxy", "redis-sentinel-proxy-active"]
         }
