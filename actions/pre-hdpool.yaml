@@ -22,18 +22,22 @@ spec:
               statefulset: {
                 spec: {
                   template: {
+                    {{- with .Necessary.annotations }}
                     metadata: {
                       annotations: {{ toCue .Necessary.annotations }}
                     }
+                    {{- end }}
                   }
                 }
               },
               deployment: {
                 spec: {
                   template: {
+                    {{- with .Necessary.annotations }}
                     metadata: {
                       annotations: {{ toCue .Necessary.annotations }}
                     }
+                    {{- end }}  
                   }
                 }
               }
