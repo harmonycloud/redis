@@ -24,7 +24,7 @@ spec:
                   template: {
                     {{- with .Necessary.annotations }}
                     metadata: {
-                      annotations: {{ toCue .Necessary.annotations }}
+                      annotations: {{ toCue . }}
                     }
                     {{- end }}
                   }
@@ -35,7 +35,7 @@ spec:
                   template: {
                     {{- with .Necessary.annotations }}
                     metadata: {
-                      annotations: {{ toCue .Necessary.annotations }}
+                      annotations: {{ toCue . }}
                     }
                     {{- end }}  
                   }
