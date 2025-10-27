@@ -29,7 +29,7 @@ spec:
                     {{- end }}
                   }
                 }
-              },
+              }
               deployment: {
                 spec: {
                   template: {
