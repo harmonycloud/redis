@@ -196,6 +196,21 @@ spec:
         type: "{{ .Parameters.type }}"
         predixy:
           enableProxy: '"{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}"'
+        alertRules:
+          MismatchedRequestResponseRate: { }
+          RedisExporterDown: { }
+          RedisFailOver: { }
+          RedisUnhealthy: { }
+          RedisLargConnect: { }
+          RedisLargeBlockConnect: { }
+          RedisReplicationBroken: { }
+          RedisOutOfConfiguredMaxmemory: { }
+          RedisVolumeUsageMinor: { }
+          RedisVolumeUsageMajor: { }
+          RedsMemoryUsageHigh: { }
+          RedisCpuUsageHigh: { }
+          RedisSentinelWatchNodeUnhealthy: { }
+          RedisSentries_num: { }
     - name: redis-config
       values:
         type: "{{ .Parameters.type }}"

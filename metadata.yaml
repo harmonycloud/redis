@@ -1,5 +1,5 @@
 name: Redis # 中间件类型
-version: 2.17.2-1.3.0 # 版本号
+version: 2.17.2-1.4.0 # 版本号
 app:
   version: # 中间件支持版本
     - "7.2.10"
@@ -20,3 +20,5 @@ changes: |
     2025.10.16: dashboard-configmap.yaml中监控面板绑定基线，设置排序
                 添加随机ip池
                 operator默认推荐资源规格
+  2.17.2-1.4.0
+    2025.10.17: 添加md告警规则默认值
