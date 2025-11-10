@@ -4,8 +4,166 @@ metadata:
   name: redis-config
 spec:
   template: |
+    {{- define "helm.function.ifListMapHasValue" -}}
+      {{- $list := index . 0 -}}
+      {{- $Key := index . 1 -}}
+      {{- $targetValue := index . 2 -}}
+      {{- $defaultValue := index . 3 -}}
+    
+      {{- $value := $defaultValue -}}
+    
+      {{- range $list -}}
+        {{- if eq (index . $Key) $targetValue -}}
+          {{- $value = $targetValue -}}
+        {{- end -}}
+      {{- end -}}
+      {{- $value -}}
+    {{- end -}}
+    
+    {{- define "redis.maxMemory" -}}
+    {{- if .Values.args.maxmemory }}
+        {{- .Values.args.maxmemory }}
+    {{- else }}
+        {{- include "redis.cal.memory" (list .Values.redis.resources.limits.memory "max") }}
+    {{- end }}
+    {{- end -}}
+
+    {{- define "redis.cal.memory" -}}
+        {{- $memoryRaw := index . 0 }}
+        {{- $target := index . 1 }}
+    
+        {{- $maxmemory := 0}}
+        {{- $hardLimit := 0}}
+        {{- $softLimit := 0}}
+    
+        {{- $memory := regexFind "[0-9]*[.]*[0-9]*" $memoryRaw }}
+        {{- $memoryB := 0 }}
+    
+        {{- if contains "." $memory }}
+            {{- $memoryLs := regexSplit "\\." ($memory | toString) -1 }}
+            {{- $memoryInt := index $memoryLs 0 }}
+            {{- $memoryDecimal := index $memoryLs 1 }}
+            {{- $memoryDecimalLen := len $memoryDecimal }}
+            {{- $memoryDecimalDigit := 1 }}
+            {{- range untilStep 0 $memoryDecimalLen 1 }}
+                {{- $memoryDecimalDigit = mul $memoryDecimalDigit 10 }}
+            {{- end }}
+            {{- if contains "GI" (upper $memoryRaw) }}
+                {{- $memoryB = add (mul ($memoryInt | int) 1024 1024 1024) (div (mul ($memoryDecimal | int) 1024 1024 1024) $memoryDecimalDigit) }}
+            {{- else if contains "G" (upper $memoryRaw) }}
+                {{- $memoryB = add (mul ($memoryInt | int) 1000 1000 1000) (div (mul ($memoryDecimal | int) 1000 1000 1000) $memoryDecimalDigit) }}
+            {{- else if contains "MI" (upper $memoryRaw) }}
+                {{- $memoryB = add (mul ($memoryInt | int) 1024 1024) (div (mul ($memoryDecimal | int) 1024 1024) $memoryDecimalDigit) }}
+            {{- else if contains "M" (upper $memoryRaw) }}
+                {{- $memoryB = add (mul ($memoryInt | int) 1000 1000) (div (mul ($memoryDecimal | int) 1000 1000) $memoryDecimalDigit) }}
+            {{- end }}
+        {{- else }}
+            {{- if contains "GI" (upper $memoryRaw) }}
+                {{- $memoryB = mul $memory 1024 1024 1024 }}
+            {{- else if contains "G" (upper $memoryRaw) }}
+                {{- $memoryB = mul $memory 1000 1000 1000 }}
+            {{- else if contains "MI" (upper $memoryRaw) }}
+                {{- $memoryB = mul $memory 1024 1024 }}
+            {{- else if contains "M" (upper $memoryRaw) }}
+                {{- $memoryB = mul $memory 1000 1000 }}
+            {{- end }}
+        {{- end }}
+    
+        {{- $memory = div (div $memoryB 1024) 1024 }}
+        {{- $maxmemory = div (mul $memory 4) 5 }}
+        {{- $hardLimit = div (mul $memory 4) 5 }}
+        {{- $softLimit = div (mul $memory 2) 5 }}
+    
+        {{- if eq $target "max" }}
+            {{- printf "%dmb" $maxmemory }}
+        {{- else if eq $target "hard" }}
+            {{- printf "%dmb" $hardLimit }}
+        {{- else if eq $target "soft" }}
+            {{- printf "%dmb" $softLimit }}
+        {{- end }}
+    {{- end -}}
+
+    {{- define "redis.outputbuff.slave.hard" -}}
+    {{- if .Values.args.maxmemory }}
+        {{- include "redis.cal.memory" (list .Values.args.maxmemory "hard") }}
+    {{- else }}
+        {{- include "redis.cal.memory" (list .Values.redis.resources.limits.memory "hard") }}
+    {{- end }}
+    {{- end -}}
+    
+    {{- define "redis.outputbuff.slave.soft" -}}
+    {{- if .Values.args.maxmemory }}
+        {{- include "redis.cal.memory" (list .Values.args.maxmemory "soft") }}
+    {{- else }}
+        {{- include "redis.cal.memory" (list .Values.redis.resources.limits.memory "soft") }}
+    {{- end }}
+    {{- end -}}
+    
+    {{- define "redis.cal.memory" -}}
+        {{- $memoryRaw := index . 0 }}
+        {{- $target := index . 1 }}
+    
+        {{- $maxmemory := 0}}
+        {{- $hardLimit := 0}}
+        {{- $softLimit := 0}}
+    
+        {{- $memory := regexFind "[0-9]*[.]*[0-9]*" $memoryRaw }}
+        {{- $memoryB := 0 }}
+    
+        {{- if contains "." $memory }}
+            {{- $memoryLs := regexSplit "\\." ($memory | toString) -1 }}
+            {{- $memoryInt := index $memoryLs 0 }}
+            {{- $memoryDecimal := index $memoryLs 1 }}
+            {{- $memoryDecimalLen := len $memoryDecimal }}
+            {{- $memoryDecimalDigit := 1 }}
+            {{- range untilStep 0 $memoryDecimalLen 1 }}
+                {{- $memoryDecimalDigit = mul $memoryDecimalDigit 10 }}
+            {{- end }}
+            {{- if contains "GI" (upper $memoryRaw) }}
+                {{- $memoryB = add (mul ($memoryInt | int) 1024 1024 1024) (div (mul ($memoryDecimal | int) 1024 1024 1024) $memoryDecimalDigit) }}
+            {{- else if contains "G" (upper $memoryRaw) }}
+                {{- $memoryB = add (mul ($memoryInt | int) 1000 1000 1000) (div (mul ($memoryDecimal | int) 1000 1000 1000) $memoryDecimalDigit) }}
+            {{- else if contains "MI" (upper $memoryRaw) }}
+                {{- $memoryB = add (mul ($memoryInt | int) 1024 1024) (div (mul ($memoryDecimal | int) 1024 1024) $memoryDecimalDigit) }}
+            {{- else if contains "M" (upper $memoryRaw) }}
+                {{- $memoryB = add (mul ($memoryInt | int) 1000 1000) (div (mul ($memoryDecimal | int) 1000 1000) $memoryDecimalDigit) }}
+            {{- end }}
+        {{- else }}
+            {{- if contains "GI" (upper $memoryRaw) }}
+                {{- $memoryB = mul $memory 1024 1024 1024 }}
+            {{- else if contains "G" (upper $memoryRaw) }}
+                {{- $memoryB = mul $memory 1000 1000 1000 }}
+            {{- else if contains "MI" (upper $memoryRaw) }}
+                {{- $memoryB = mul $memory 1024 1024 }}
+            {{- else if contains "M" (upper $memoryRaw) }}
+                {{- $memoryB = mul $memory 1000 1000 }}
+            {{- end }}
+        {{- end }}
+    
+        {{- $memory = div (div $memoryB 1024) 1024 }}
+        {{- $maxmemory = div (mul $memory 4) 5 }}
+        {{- $hardLimit = div (mul $memory 4) 5 }}
+        {{- $softLimit = div (mul $memory 2) 5 }}
+    
+        {{- if eq $target "max" }}
+            {{- printf "%dmb" $maxmemory }}
+        {{- else if eq $target "hard" }}
+            {{- printf "%dmb" $hardLimit }}
+        {{- else if eq $target "soft" }}
+            {{- printf "%dmb" $softLimit }}
+        {{- end }}
+    {{- end -}}
+
     {{$customVolumeLogName := "redis-logs"}}
     {{$customVolumeDataName := "redis-data"}}
+    
+    {{- if .Values.customVolumes }}
+    {{$customVolumeLogName = include "helm.function.ifListMapHasValue" (list .Values.customVolumes "name" "redis-logs" "redis-data") }}
+    {{- end }}
+    
+    {{$maxMemory := include "redis.maxMemory" . }}
+    {{$replciaHardLimit := include "redis.outputbuff.slave.hard" . }}
+    {{$replciaSoftLimit := include "redis.outputbuff.slave.soft" . }}
 
     apiVersion: v1
     data:
@@ -22,7 +180,7 @@ spec:
         appendonly {{ .Values.args.appendonly | default "no" }}
         lua-time-limit {{ index .Values.args "lua-time-limit" | default 5000 }}
         slowlog-log-slower-than {{ index .Values.args "slowlog-log-slower-than" | default 10000 }}
-        maxmemory 409mb
+        maxmemory {{ $maxMemory }}
         zset-max-ziplist-entries {{ index .Values.args "zset-max-ziplist-entries" | default 128 }}
         cluster-config-file nodes-{REDIS_INSTANCE_PORT}.conf
         save {{ .Values.args.save | default "60 10000" }}
@@ -71,7 +229,7 @@ spec:
         {{- end }}
         rdbchecksum {{ .Values.args.rdbchecksum | default "yes" }}
         cluster-require-full-coverage {{ index .Values.args "cluster-require-full-coverage" | default "no" }}
-        client-output-buffer-limit {{ index .Values.args "client-output-buffer-limit" | default (printf "replica %s %s 120" "409mb" "204mb") }}
+        client-output-buffer-limit {{ index .Values.args "client-output-buffer-limit" | default (printf "replica %s %s 120" $replciaHardLimit $replciaSoftLimit) }}
         maxclients {{ .Values.args.maxclients | default 15000 }}
         slave-priority {{ index .Values.args "slave-priority" | default 100 }}
         hll-sparse-max-bytes {{ index .Values.args "hll-sparse-max-bytes" | default 3000 }}

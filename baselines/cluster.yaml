@@ -161,7 +161,7 @@ spec:
               cpu: '"{{ .Necessary.resource.redis.requests.cpu }}"'
               memory: '"{{ .Necessary.resource.redis.requests.memory }}"'
         type: "{{ .Parameters.type }}"
-        version: "{{ .Necessary.version }}"
+        version: "{{ .Parameters.version }}"
         customVolumes: { }
         additionArgs: { }
         args:
