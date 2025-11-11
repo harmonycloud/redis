@@ -167,6 +167,14 @@ spec:
           RedisSentries_num: { }
     - name: redis-config
       values:
+        redis:
+          resources:
+            limits:
+              cpu: '"{{ .Necessary.resource.redis.limits.cpu }}"'
+              memory: '"{{ .Necessary.resource.redis.limits.memory }}"'
+            requests:
+              cpu: '"{{ .Necessary.resource.redis.requests.cpu }}"'
+              memory: '"{{ .Necessary.resource.redis.requests.memory }}"'
         type: "{{ .Parameters.type }}"
         version: "{{ .Necessary.version }}"
         customVolumes: { }
