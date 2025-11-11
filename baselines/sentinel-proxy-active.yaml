@@ -240,6 +240,14 @@ spec:
           enableProxy: '"{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}"'
     - name: redis-config
       values:
+        redis:
+          resources:
+            limits:
+              cpu: '"{{ .Necessary.resource.redis.limits.cpu }}"'
+              memory: '"{{ .Necessary.resource.redis.limits.memory }}"'
+            requests:
+              cpu: '"{{ .Necessary.resource.redis.requests.cpu }}"'
+              memory: '"{{ .Necessary.resource.redis.requests.memory }}"'
         type: "{{ .Parameters.type }}"
         version: "{{ .Parameters.version }}"
         customVolumes: { }
