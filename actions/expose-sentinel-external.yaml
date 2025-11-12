@@ -306,6 +306,14 @@ spec:
             rm -f /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml
             {{- end }}
             {{- end }}
+    - name: getDeployMethod
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - |
+            kubectl get rec {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} -o jsonpath='{.spec.sentinel.deployMethod}'
     - name: createSentinelClusterIP
       output:
         type: "string"
@@ -316,7 +324,7 @@ spec:
             # 加载回滚函数
             source /tmp/rollback-functions.sh
             
-            {{- if eq .Parameters.sentinel.deployMethod "statefulset"}}
+            {{- if eq .Step.getDeployMethod.output "statefulset"}}
             {{- range $index, $value := .Necessary.sentinelPorts }}
             POD_NAME="{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}"
             NAMESPACE="{{ $.Globe.Namespace }}"
@@ -385,7 +393,7 @@ spec:
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
             CLUSTER_UID="{{ $.Step.getUid.output }}"
             PROTOCOL="{{ $.Necessary.protocol }}"
-            {{- if eq .Parameters.sentinel.deployMethod "statefulset"}}
+            {{- if eq .Step.getDeployMethod.output "statefulset"}}
             PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].port}')
             TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
             SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
@@ -399,7 +407,7 @@ spec:
             apiVersion: v1
             kind: Service
             metadata:
-              {{- if eq .Parameters.sentinel.deployMethod "statefulset"}}
+              {{- if eq .Step.getDeployMethod.output "statefulset"}}
               name: {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-nodeport
               {{- else }}
               name: {{ $.Globe.MiddlewareName }}-sentinel-nodeport
@@ -460,7 +468,7 @@ spec:
             metadata:
               annotations:
                 kubernetes.io/ingress.class: {{ $.Necessary.traefikName }}
-              {{- if eq .Parameters.sentinel.deployMethod "statefulset" }}
+              {{- if eq .Step.getDeployMethod.output "statefulset" }}
               name: {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-nodeport
               {{- else }}
               name: {{ $.Globe.MiddlewareName }}-sentinel-nodeport
@@ -475,7 +483,7 @@ spec:
               routes:
               - match: HostSNI (\`*\`)
                 services:
-                {{- if eq .Parameters.sentinel.deployMethod "statefulset" }}
+                {{- if eq .Step.getDeployMethod.output "statefulset" }}
                 - name: {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod
                 {{- else }}
                 - name: {{ $.Globe.MiddlewareName }}-sentinel
