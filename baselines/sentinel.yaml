@@ -50,7 +50,7 @@ spec:
             "type": "enum",
             "label": "部署方式",
             "required": true,
-            "default":"Deployment",
+            "default":"deployment",
             "options": "无状态部署,有状态部署",
             "visible": true,
             "optionsMap": [
