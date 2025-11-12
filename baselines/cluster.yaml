@@ -108,7 +108,7 @@ spec:
           {{- $middlewareImage := index $versionMap $version | default "" -}}
           {{- $middlewareImage -}}
           {{- end }}
-          {{ include "middleware.image" . }}
+          {{ include "middleware.image" . | trim }}
         initImage: "redis-init:v1.7.4"
         monitorImage: "redis-exporter:v1.0.5-1.1.0"
         logrotateImage: "logrotate:3.21.0-1.0.0"
@@ -126,7 +126,6 @@ spec:
         command: /bin/launch.sh
     exporter:
       port: 9121
-      rdbScan: { }
       sentinelPort: 9121
       hotKeyScan:
         enable: true
@@ -164,7 +163,7 @@ spec:
     - name: redis-credential
       values:
         redis:
-          port: "{{ (index .Parameters.pod 0).servicePort }}"
+          port: "{{ .Parameters.servicePort }}"
         redisPassword: "{{ (index .Parameters.pod 0).requirepass }}"
     - name: redis-predixy-servicemonitor
       values:
@@ -201,7 +200,7 @@ spec:
               cpu: '"{{ .Necessary.resource.redis.requests.cpu }}"'
               memory: '"{{ .Necessary.resource.redis.requests.memory }}"'
         type: "{{ .Parameters.type }}"
-        version: "{{ .Necessary.version }}"
+        version: "{{ .Parameters.version }}"
         customVolumes: { }
         additionArgs: { }
         args:

@@ -51,6 +51,19 @@ spec:
         requests:
           cpu: '{"type":"string","label":"CPU","required":true,"description":"请输入自定义配额,单位为Core","placeholder":"请输入自定义配额,单位为Core","default":"2"}'
           memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
+      deployMethod: |
+        {
+          "type": "enum",
+          "label": "部署方式",
+          "required": true,
+          "default":"Deployment",
+          "options": "无状态部署,有状态部署",
+          "visible": true,
+          "optionsMap": [
+            {"label": "无状态部署", "value": "Deployment"},
+            {"label": "有状态部署", "value": "StatefulSet"}
+          ]
+        }
   preActions:
     - name: pre-redis-heimdallr-hdpool
       parameters:
@@ -128,6 +141,7 @@ spec:
           maxUnavailable: 1
         type: RollingUpdate
     sentinel:
+      deployMethod: "{{ .Necessary.resource.sentinel.deployMethod }}"
       affinity:
       env:
         - name: POD_IP
@@ -211,8 +225,8 @@ spec:
           {{- $_ := set $versionMap "8.0.4" (printf "redis-cli-port:%s" "8.0.4-1.0.0") -}}
           {{- $middlewareImage := index $versionMap $version | default "" -}}
           {{- $middlewareImage -}}
-          {{- end -}}
-          {{- include "middleware.image" . | quote -}}
+          {{- end }}
+          {{ include "middleware.image" . | trim }}
         initImage: "redis-init:v1.7.4"
         monitorImage: "redis-exporter:v1.0.5-1.1.0"
         logrotateImage: "logrotate:3.21.0-1.0.0"
@@ -230,8 +244,23 @@ spec:
         command: /bin/launch.sh
     exporter:
       port: 9121
-      rdbScan: { }
       sentinelPort: 9121
+      hotKeyScan:
+        enable: true
+        interval: 3600
+        hotkeyThreshold: 2
+        hotKeylen: 100
+      rdbScan:
+        enable: true
+        interval: 3600
+        bigKeyThreshold: 1024
+        bigKeyLen: 100
+        filePath: "/data/redis/cluster.local/{{ .Globe.Namespace }}/{{ .Globe.Name }}/{POD_NAME}/data"
+      envs:
+      - name: "REDIS_EXPORTER_SLOWLOG_ENABLED"
+        value: "true"
+      - name: "REDIS_EXPORTER_SLOWLOG_LIMIT"
+        value: "100"
     podManagementPolicy: Parallel
     replicas: "{{ div .Necessary.resource.redis.replicas 2 }}"
     servicePort: 6379
@@ -252,7 +281,7 @@ spec:
     - name: redis-credential
       values:
         redis:
-          port: "{{ (index .Parameters.pod 0).servicePort }}"
+          port: "{{ .Parameters.servicePort }}"
         redisPassword: "{{ (index .Parameters.pod 0).requirepass }}"
     - name: redis-predixy-servicemonitor
       values:
