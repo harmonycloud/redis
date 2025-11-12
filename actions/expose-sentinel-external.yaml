@@ -16,7 +16,7 @@ spec:
     traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true,"visible": true}'
     host: '{"type":"string","label":"负载均衡地址","required":true,"visible": false}' # nodeport主机地址
     ports: '{"type":"expose","label":"Redis节点端口","required":true,"ref":"master*1,slave*1,","size":"1","visible": true,"placeholder":"请输入端口号,点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号"}'# 不固定，根据baseline提供的渲染
-    sentinelPorts: '{"type":"expose","label":"哨兵端口","ref":"sentinel","size":"1","visible": true,"placeholder":"请输入端口号，点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号"}'# 不固定，根据baseline提供的渲染
+    sentinelPorts: '{"type":"expose","label":"哨兵端口","ref":"sentinel*1","size":"1","visible": true,"placeholder":"请输入端口号，点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号"}'# 不固定，根据baseline提供的渲染
     protocol: '{"type":"enum","label":"协议","required":true,"options":"TCP","visible": true}' # 协议
   steps:
     - name: initRollback
@@ -306,6 +306,70 @@ spec:
             rm -f /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml
             {{- end }}
             {{- end }}
+    - name: createSentinelClusterIP
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - |
+            # 加载回滚函数
+            source /tmp/rollback-functions.sh
+            
+            {{- if eq .Parameters.sentinel.deployMethod "statefulset"}}
+            {{- range $index, $value := .Necessary.sentinelPorts }}
+            POD_NAME="{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}"
+            NAMESPACE="{{ $.Globe.Namespace }}"
+            MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
+            CLUSTER_UID="{{ $.Step.getUid.output }}"
+            PROTOCOL="{{ $.Necessary.protocol }}"
+
+            {{- if eq $.Necessary.handleType "create" }}
+            kubectl apply -f - <<EOF > /dev/null 2>&1
+            {{- else if eq $.Necessary.handleType "delete" }}
+            kubectl delete -f - <<EOF > /dev/null 2>&1
+            {{- end }}
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: ${POD_NAME}-pod
+              namespace: ${NAMESPACE}
+              ownerReferences:
+                - apiVersion: redis.middleware.hc.cn/v1alpha1
+                  blockOwnerDeletion: false
+                  controller: true
+                  kind: RedisCluster
+                  name: ${MIDDLEWARE_NAME}
+                  uid: ${CLUSTER_UID}
+              labels:
+                middleware.cn/source: "actionbaseline"
+                middleware.cn/sourcename: "redis-sentinel-expose-external"
+            spec:
+              ports:
+                - name: redis
+                  port: 26379
+                  protocol: ${PROTOCOL}
+                  targetPort: 26379
+              selector:
+                app: ${MIDDLEWARE_NAME}
+                component: ${MIDDLEWARE_NAME}
+                middleware: redis
+                statefulset.kubernetes.io/pod-name: ${POD_NAME}
+              type: ClusterIP
+            EOF
+            {{- if eq $.Necessary.handleType "create" }}
+            # 如果创建成功，添加到回滚列表
+            if [ $? -eq 0 ]; then
+              add_to_rollback "kubectl delete svc ${POD_NAME}-pod -n ${NAMESPACE} --ignore-not-found=true"
+            else
+              echo "Failed to create Sentinel ClusterIP Service: ${POD_NAME}-pod"
+              echo "$ERROR_OUTPUT"
+              execute_rollback
+              exit 1
+            fi
+            {{- end }}
+            {{- end }}
+            {{- end }}
     - name: createSentinelNodePort
       output:
         type: "string"
@@ -321,16 +385,25 @@ spec:
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
             CLUSTER_UID="{{ $.Step.getUid.output }}"
             PROTOCOL="{{ $.Necessary.protocol }}"
+            {{- if eq .Parameters.sentinel.deployMethod "statefulset"}}
+            PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].port}')
+            TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
+            SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
+            {{- else }}
             PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].port}')
             TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
-            SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
-
+            SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')           
+            {{- end }}
             {{- if eq $.Necessary.exposeType "NodePort" }}
             cat > /tmp/sentinel-nodeport-service-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml << EOF
             apiVersion: v1
             kind: Service
             metadata:
+              {{- if eq .Parameters.sentinel.deployMethod "statefulset"}}
+              name: {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-nodeport
+              {{- else }}
               name: {{ $.Globe.MiddlewareName }}-sentinel-nodeport
+              {{- end }}
               namespace: ${NAMESPACE}
               ownerReferences:
                 - apiVersion: redis.middleware.hc.cn/v1alpha1
@@ -387,7 +460,11 @@ spec:
             metadata:
               annotations:
                 kubernetes.io/ingress.class: {{ $.Necessary.traefikName }}
+              {{- if eq .Parameters.sentinel.deployMethod "statefulset" }}
+              name: {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-nodeport
+              {{- else }}
               name: {{ $.Globe.MiddlewareName }}-sentinel-nodeport
+              {{- end }}
               namespace: ${NAMESPACE}
               labels:
                 middleware.cn/source: "actionbaseline"
@@ -398,7 +475,11 @@ spec:
               routes:
               - match: HostSNI (\`*\`)
                 services:
+                {{- if eq .Parameters.sentinel.deployMethod "statefulset" }}
+                - name: {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod
+                {{- else }}
                 - name: {{ $.Globe.MiddlewareName }}-sentinel
+                {{- end }}
                   port: ${PORT}
             EOF
             {{- if eq $.Necessary.handleType "create" }}
