@@ -54,8 +54,8 @@ spec:
             "options": "无状态部署,有状态部署",
             "visible": true,
             "optionsMap": [
-              {"label": "无状态部署", "value": "Deployment"},
-              {"label": "有状态部署", "value": "StatefulSet"}
+              {"label": "无状态部署", "value": "deployment"},
+              {"label": "有状态部署", "value": "statefulset"}
             ]
           }
   preActions:
