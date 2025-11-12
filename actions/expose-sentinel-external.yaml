@@ -393,7 +393,7 @@ spec:
             MIDDLEWARE_NAME="{{ $.Globe.MiddlewareName }}"
             CLUSTER_UID="{{ $.Step.getUid.output }}"
             PROTOCOL="{{ $.Necessary.protocol }}"
-            {{- if eq .Step.getDeployMethod.output "statefulset"}}
+            {{- if eq $.Step.getDeployMethod.output "statefulset"}}
             PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].port}')
             TARGET_PORT=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.ports[0].targetPort}')
             SELECTOR_YAML=$(kubectl get svc {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod -n ${NAMESPACE} -o jsonpath='{.spec.selector}' | sed 's/{"//g; s/"}//g; s/":"/: "/g; s/","/\n    /g; s/^/    /' | sed 's/$/"/')
@@ -407,7 +407,7 @@ spec:
             apiVersion: v1
             kind: Service
             metadata:
-              {{- if eq .Step.getDeployMethod.output "statefulset"}}
+              {{- if eq $.Step.getDeployMethod.output "statefulset"}}
               name: {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-nodeport
               {{- else }}
               name: {{ $.Globe.MiddlewareName }}-sentinel-nodeport
@@ -468,7 +468,7 @@ spec:
             metadata:
               annotations:
                 kubernetes.io/ingress.class: {{ $.Necessary.traefikName }}
-              {{- if eq .Step.getDeployMethod.output "statefulset" }}
+              {{- if eq $.Step.getDeployMethod.output "statefulset" }}
               name: {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-nodeport
               {{- else }}
               name: {{ $.Globe.MiddlewareName }}-sentinel-nodeport
@@ -483,7 +483,7 @@ spec:
               routes:
               - match: HostSNI (\`*\`)
                 services:
-                {{- if eq .Step.getDeployMethod.output "statefulset" }}
+                {{- if eq $.Step.getDeployMethod.output "statefulset" }}
                 - name: {{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}-pod
                 {{- else }}
                 - name: {{ $.Globe.MiddlewareName }}-sentinel
