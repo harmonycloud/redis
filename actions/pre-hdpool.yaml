@@ -41,6 +41,11 @@ spec:
                   }
                 }
               }
+              predixy: {
+                {{- with .Necessary.annotations }}
+                tolerations: {{ toCue . }}
+                {{- end }}
+              }
               {{- end }}
             }
           }

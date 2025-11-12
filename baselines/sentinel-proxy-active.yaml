@@ -15,7 +15,7 @@ spec:
     gvkName: v1alpha1
   necessary:
     repository: ""
-    version: '{"type":"version","label":"版本","required":true,"default":"7.2.8"}'
+    version: '{"type":"version","label":"版本","required":true,"default":"8.0.4"}'
     password: |
       {
         "type": "password",
@@ -187,7 +187,32 @@ spec:
           harmonycloud.cn/statefulset: "{{ .Globe.Name }}"
           middleware: redis
           nephele/user: admin
-        middlewareImage: '{{ if eq .Necessary.version "5.0.8" }}redis-cli-v5-port:5.0.8-1.1.1{{ else if eq .Necessary.version "6.2.6" }}redis-cli-v6-port:6.2.6-1.2.0{{ else if eq .Necessary.version "6.2.11" }}redis-cli-v6-port:6.2.11-1.2.0{{ else if eq .Necessary.version "6.2.14" }}redis-cli-v6-port:6.2.14-1.2.0{{ else if eq .Necessary.version "6.2.16" }}redis-cli-v6-port:6.2.16-1.0.0{{ else if eq .Necessary.version "6.2.18" }}redis-cli-v6-port:6.2.18-1.0.0{{ else if eq .Necessary.version "7.0.12" }}redis-cli-v7-port:7.0.12-1.2.0{{ else if eq .Necessary.version "7.0.15" }}redis-cli-v7-port:7.0.15{{ else if eq .Necessary.version "7.2.4" }}redis-cli-v7-port:7.2.4-1.2.0{{ else if eq .Necessary.version "7.2.8" }}redis-cli-v7-port:7.2.8-1.0.0{{ else if eq .Necessary.version "6.2.19" }}redis-cli-port:6.2.19-1.0.0{{ else if eq .Necessary.version "7.2.10" }}redis-cli-port:7.2.10-1.0.0{{ else if eq .Necessary.version "7.4.5" }}redis-cli-port:7.4.5-1.0.0{{ else if eq .Necessary.version "8.0.3" }}redis-cli-port:8.0.3-1.0.0{{ end }}'
+        middlewareImage: |
+          {{- define "middleware.image" -}}
+          {{- $version := .Necessary.version -}}
+          {{- $versionMap := dict -}}
+          {{- $_ := set $versionMap "5.0.8" (printf "redis-cli-v5-port:%s" "5.0.8-1.1.1") -}}
+          {{- $_ := set $versionMap "6.2.6" (printf "redis-cli-v6-port:%s" "6.2.6-1.2.0") -}}
+          {{- $_ := set $versionMap "6.2.11" (printf "redis-cli-v6-port:%s" "6.2.11-1.2.0") -}}
+          {{- $_ := set $versionMap "6.2.14" (printf "redis-cli-v6-port:%s" "6.2.14-1.2.0") -}}
+          {{- $_ := set $versionMap "6.2.16" (printf "redis-cli-v6-port:%s" "6.2.16-1.0.0") -}}
+          {{- $_ := set $versionMap "6.2.18" (printf "redis-cli-v6-port:%s" "6.2.18-1.0.0") -}}
+          {{- $_ := set $versionMap "6.2.19" (printf "redis-cli-port:%s" "6.2.19-1.0.0") -}}
+          {{- $_ := set $versionMap "6.2.20" (printf "redis-cli-port:%s" "6.2.20-1.0.0") -}}
+          {{- $_ := set $versionMap "7.0.12" (printf "redis-cli-v7-port:%s" "7.0.12-1.2.0") -}}
+          {{- $_ := set $versionMap "7.0.15" (printf "redis-cli-v7-port:%s" "7.0.15-1.0.0") -}}
+          {{- $_ := set $versionMap "7.2.4" (printf "redis-cli-v7-port:%s" "7.2.4-1.2.0") -}}
+          {{- $_ := set $versionMap "7.2.8" (printf "redis-cli-v7-port:%s" "7.2.8-1.0.0") -}}
+          {{- $_ := set $versionMap "7.2.10" (printf "redis-cli-port:%s" "7.2.10-1.0.0") -}}
+          {{- $_ := set $versionMap "7.2.11" (printf "redis-cli-port:%s" "7.2.11-1.0.0") -}}
+          {{- $_ := set $versionMap "7.4.5" (printf "redis-cli-port:%s" "7.4.5-1.0.0") -}}
+          {{- $_ := set $versionMap "7.4.6" (printf "redis-cli-port:%s" "7.4.6-1.0.0") -}}
+          {{- $_ := set $versionMap "8.0.3" (printf "redis-cli-port:%s" "8.0.3-1.0.0") -}}
+          {{- $_ := set $versionMap "8.0.4" (printf "redis-cli-port:%s" "8.0.4-1.0.0") -}}
+          {{- $middlewareImage := index $versionMap $version | default "" -}}
+          {{- $middlewareImage -}}
+          {{- end -}}
+          {{- include "middleware.image" . | quote -}}
         initImage: "redis-init:v1.7.4"
         monitorImage: "redis-exporter:v1.0.5-1.1.0"
         logrotateImage: "logrotate:3.21.0-1.0.0"
