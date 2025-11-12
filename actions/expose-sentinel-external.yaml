@@ -549,6 +549,15 @@ spec:
                       {{- end }}
                       {{- end }}
                     }
+                    {{- if eq .Step.getDeployMethod.output "statefulset" }}
+                    sentinelAddresses: {
+                      {{- if eq .Necessary.handleType "create" }}
+                      {{- range $index, $value := .Necessary.sentinelPorts }}
+                      "{{ $.Globe.MiddlewareName }}-sentinel-{{ $index }}": "{{ $.Necessary.host }}:{{ $value }}"
+                      {{- end }}
+                      {{- end }}
+                    }
+                    {{- end }}
                   }
                 },
               ]
