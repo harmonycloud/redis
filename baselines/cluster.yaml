@@ -107,8 +107,8 @@ spec:
           {{- $_ := set $versionMap "8.0.4" (printf "redis-cli-port:%s" "8.0.4-1.0.0") -}}
           {{- $middlewareImage := index $versionMap $version | default "" -}}
           {{- $middlewareImage -}}
-          {{- end -}}
-          {{- include "middleware.image" . | quote -}}
+          {{- end }}
+          {{ include "middleware.image" . }}
         initImage: "redis-init:v1.7.4"
         monitorImage: "redis-exporter:v1.0.5-1.1.0"
         logrotateImage: "logrotate:3.21.0-1.0.0"
