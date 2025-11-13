@@ -20,7 +20,7 @@ spec:
     sentinelPorts: |
       {
         "type": "expose",
-        "label": "测试端口",
+        "label": "哨兵端口",
         "size": "1",
         "ref": "${#spec['necessary']['resource']['sentinel']['deployMethod'] == 'deployment' ? 'sentinel' : 'sentinel*1'}",
         "placeholder": "请输入端口号，点击回车进行添加",
