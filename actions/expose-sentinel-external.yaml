@@ -22,7 +22,7 @@ spec:
         "type": "expose",
         "label": "测试端口",
         "size": "1",
-        "ref": "${spec.necessary.resource.sentinel.deployMethod == 'deployment' ? 'sentinel' : 'sentinel*1'}"
+        "ref": "${#spec.#necessary.#resource.#sentinel.#deployMethod == 'deployment' ? 'sentinel' : 'sentinel*1'}"
         "placeholder": "请输入端口号，点击回车进行添加",
         "pattern": "^[1-9]\\d*$",
         "description": "请输入合法端口号"
