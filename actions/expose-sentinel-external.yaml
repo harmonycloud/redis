@@ -370,7 +370,7 @@ spec:
                   targetPort: 26379
               selector:
                 app: ${MIDDLEWARE_NAME}
-                component: ${MIDDLEWARE_NAME}
+                component: ${MIDDLEWARE_NAME}-sentinel
                 middleware: redis
                 statefulset.kubernetes.io/pod-name: ${POD_NAME}
               type: ClusterIP
