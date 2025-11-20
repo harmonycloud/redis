@@ -9,7 +9,7 @@ app:
     - "7.4.6"
     - "8.0.4"
     - "6.2.20"
-owner: harmonycloud # 供应商
+owner: HarmonyCloud # 供应商
 type: db # 类型
 chartType: Redis
 description: Redis 缓存数据库
