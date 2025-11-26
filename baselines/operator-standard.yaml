@@ -234,7 +234,7 @@ spec:
         spec:
           containers:
             - name: "{{ .Globe.Name }}"
-              image: '{{ if ne .Globe.repository "" }}{{ .Globe.repository }}/{{ end }}{{ .Globe.project }}/redis-operator:ef57df7b'
+              image: '{{ if ne .Globe.repository "" }}{{ .Globe.repository }}/{{ end }}{{ .Globe.project }}/redis-operator:91289d40'
               command:
                 - /manager
                 - --v=5
