@@ -3,7 +3,7 @@ kind: MiddlewareActionBaseline
 metadata:
   name: redis-restart
   annotations:
-    alias: "服务重启"
+    alias: "Middleware Restart"
 spec:
   baselineType: "OpsAction"
   actionType: "restart"

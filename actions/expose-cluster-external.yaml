@@ -3,7 +3,7 @@ kind: MiddlewareActionBaseline
 metadata:
   name: redis-cluster-expose-external
   annotations:
-    alias: "服务暴露-集群外访问"
+    alias: "Services Exposure-External Access"
 spec:
   baselineType: "NormalAction"
   actionType: "expose"
@@ -12,11 +12,11 @@ spec:
   necessary:
     handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,delete","visible": true}' # create、delete
     exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress","visible": true}' # nodePort、 traefik
-    traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true,"visible": true}'
-    host: '{"type":"string","label":"负载均衡地址","required":true,"visible": false}' # nodeport主机地址
-    ports: '{"type":"expose","label":"Redis节点端口","required":true,"ref":"master*1,slave*1,","size":"1","visible": true,"placeholder":"请输入端口号，点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号"}' # 不固定，根据baseline提供的渲染
-    busPorts: '{"type":"expose","label":"Redis总线端口","required":true,"ref":"master*1,slave*1,","size":"1","visible": true,"placeholder":"请输入端口号,点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号"}' # 不固定，根据baseline提供的渲染
-    protocol: '{"type":"enum","label":"协议","required":true,"options":"TCP","visible": true}' # 协议
+    traefikName: '{"type":"string","label":"Load Balancer Controller","required":true,"visible": true}'
+    host: '{"type":"string","label":"Load Balancer Address","required":true,"visible": false}' # nodeport主机地址
+    ports: '{"type":"expose","label":"Redis Node Port","required":true,"ref":"master*1,slave*1,","size":"1","visible": true,"placeholder":"Please enter the number of instances","pattern":"^[1-9]\\d*$","description":"Please enter a valid port number"}' # 不固定，根据baseline提供的渲染
+    busPorts: '{"type":"expose","label":"Redis Bus Port","required":true,"ref":"master*1,slave*1,","size":"1","visible": true,"placeholder":"Please enter the number of instances","pattern":"^[1-9]\\d*$","description":"Please enter a valid port number"}' # 不固定，根据baseline提供的渲染
+    protocol: '{"type":"enum","label":"protocol","required":true,"options":"TCP","visible": true}' # 协议
   steps:
     - name: initRollback
       output:

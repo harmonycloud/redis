@@ -3,7 +3,7 @@ kind: MiddlewareActionBaseline
 metadata:
   name: redis-sentinel-expose-readwrite
   annotations:
-    alias: "服务暴露-读写"
+    alias: "Services Exposure-Read-Write"
 spec:
   baselineType: "NormalAction"
   actionType: "expose"

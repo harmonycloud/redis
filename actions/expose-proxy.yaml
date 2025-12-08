@@ -3,7 +3,7 @@ kind: MiddlewareActionBaseline
 metadata:
   name: redis-proxy-expose
   annotations:
-    alias: "服务暴露-读写分离"
+    alias: "Services Exposure-R/W split"
 spec:
   baselineType: "NormalAction"
   actionType: "expose"
@@ -14,9 +14,9 @@ spec:
   necessary:
     handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,update,delete","visible": true}' # create、delete
     exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress","visible": true}' # nodePort、traefik
-    traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true,"visible": true}'
-    ports: '{"type":"expose","label":"Redis节点端口","required":true,"size":"1","visible": true,"placeholder":"请输入端口号，点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号", "update": true}'# 不固定，根据baseline提供的渲染
-    protocol: '{"type":"enum","label":"协议","required":true,"options":"TCP","visible": true}' # 协议
+    traefikName: '{"type":"string","label":"Load Balancer Controller","required":true,"visible": true}'
+    ports: '{"type":"expose","label":"Redis Node Port","required":true,"size":"1","visible": true,"placeholder":"Please enter the number of instances","pattern":"^[1-9]\\d*$","description":"Please enter a valid port number", "update": true}'# 不固定，根据baseline提供的渲染
+    protocol: '{"type":"enum","label":"protocol","required":true,"options":"TCP","visible": true}' # 协议
   steps:
     - name: initRollback
       output:

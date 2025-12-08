@@ -6,8 +6,8 @@ metadata:
     nephele/user: admin
   annotations:
     datapath: '{{ printf "/data/redis/cluster.local/%s/%s/{POD_NAME}/data" .Globe.Namespace .Globe.Name }}'
-    baselineName: "哨兵模式-双活"
-    description: "哨兵模式基线,包含核心功能和必要依赖,适用于快速部署和基本应用场景,稳定可靠,易于扩展和维护."
+    baselineName: "Sentinel Mode A/A"
+    description: "Sentinel mode,incorporating core functionality and essential dependencies, is tailored for rapid deployment and fundamental application scenarios. It delivers stable and reliable performance, and is designed for ease of extension and maintenance."
     active: "2"
 spec:
   operatorBaseline:
@@ -15,46 +15,46 @@ spec:
     gvkName: v1alpha1
   necessary:
     repository: ""
-    version: '{"type":"version","label":"版本","required":true,"default":"8.0.4"}'
+    version: '{"type":"version","label":"Version","required":true,"default":"8.0.4"}'
     password: |
       {
         "type": "password",
-        "label": "管理员账号密码",
+        "label": "AdminPassword",
         "required": true,
-        "description": "请输入由英文字母、数字或特殊字符“/、~、%、_、.”组成的密码信息",
-        "placeholder": "输入管理员账户密码",
+        "description": "Please enter a password consisting of English letters, numbers, or special characters /, ~, %, _, .",
+        "placeholder": "Enter your admin password",
         "default": "Hc@Cloud01",
         "pattern": "^[^!&|;$\\'\"><*?`(){}@#]*$"
        }
     resource:
       redis:
         limits:
-          cpu: '{"type":"string","label":"CPU","required":true,"description":"请输入自定义配额,单位为Core","placeholder":"请输入自定义配额,单位为Core","default":"1"}'
-          memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core`","placeholder":"Please enter a custom quota, the unit is `Core`","default":"1"}'
+          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4"}'
         requests:
-          cpu: '{"type":"string","label":"CPU","required":true,"description":"请输入自定义配额,单位为Core","placeholder":"请输入自定义配额,单位为Core","default":"1"}'
-          memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
-        replicas: '{"type":"int","label":"实例数","required":true,"description":"分片数，最小为单分片","default":2,"pattern":"^[1-9]\\d*$","placeholder":"请输入实例数"}'
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core`","placeholder":"Please enter a custom quota, the unit is `Core`","default":"1"}'
+          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4"}'
+        replicas: '{"type":"int","label":"Replicas","required":true,"description":"Number of shards, minimum is 1","default":2,"pattern":"^[1-9]\\d*$","placeholder":"Please enter the number of instances"}'
         volumes: ""
       sentinel:
         limits:
-          cpu: '{"type":"string","label":"CPU","required":true,"description":"请输入自定义配额,单位为Core","placeholder":"请输入自定义配额,单位为Core","default":"1"}'
-          memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core`","placeholder":"Please enter a custom quota, the unit is `Core`","default":"1"}'
+          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4"}'
         requests:
-          cpu: '{"type":"string","label":"CPU","required":true,"description":"请输入自定义配额,单位为Core","placeholder":"请输入自定义配额,单位为Core","default":"1"}'
-          memory: '{"type":"string","label":"内存","required":true,"description":"请输入自定义配额,单位为Gi","placeholder":"请输入自定义配额,单位为Gi","default":"4"}'
-        replicas: '{"type":"int","label":"实例数","required":true,"description":"当前输入的实例数不符合规范，实例数最低为1，请调整后再次提交","default":3,"pattern":"^[1-9]\\d*$","placeholder":"请输入实例数"}'
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core`","placeholder":"Please enter a custom quota, the unit is `Core`","default":"1"}'
+          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4"}'
+        replicas: '{"type":"int","label":"Replicas","required":true,"description":"The number of instances you entered is invalid. The minimum number of instances is 1. Please adjust and resubmit","default":3,"pattern":"^[1-9]\\d*$","placeholder":"Please enter the number of instances"}'
         deployMethod: |
           {
             "type": "enum",
-            "label": "部署方式",
+            "label": "Deployment Method",
             "required": true,
             "default":"deployment",
             "options": "无状态部署,有状态部署",
             "visible": true,
             "optionsMap": [
-              {"label": "无状态部署", "value": "deployment"},
-              {"label": "有状态部署", "value": "statefulset"}
+              {"label": "Deployment", "value": "deployment"},
+              {"label": "StatefulSet", "value": "statefulset"}
             ]
           }
   preActions:

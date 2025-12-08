@@ -3,7 +3,7 @@ kind: MiddlewareActionBaseline
 metadata:
   name: redis-sentinel-expose-external
   annotations:
-    alias: "服务暴露-哨兵"
+    alias: "Services Exposure-Sentinel"
 spec:
   baselineType: "NormalAction"
   actionType: "expose"
@@ -13,19 +13,19 @@ spec:
   necessary:
     handleType: '{"type":"enum","label":"handleType","required":true,"options":"create,delete","visible": true}' # create、delete
     exposeType: '{"type":"enum","label":"exposeType","required":true,"options":"NodePort,Ingress","visible": true}' # nodePort、traefik
-    traefikName: '{"type":"string","label":"负载均衡控制器名称","required":true,"visible": true}'
-    host: '{"type":"string","label":"负载均衡地址","required":true,"visible": false}' # nodeport主机地址
-    ports: '{"type":"expose","label":"Redis节点端口","required":true,"ref":"master*1,slave*1,","size":"1","visible": true,"placeholder":"请输入端口号,点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号"}'# 不固定，根据baseline提供的渲染
+    traefikName: '{"type":"string","label":"Load Balancer Controller","required":true,"visible": true}'
+    host: '{"type":"string","label":"Load Balancer Address","required":true,"visible": false}' # nodeport主机地址
+    ports: '{"type":"expose","label":"Redis Node Port","required":true,"ref":"master*1,slave*1,","size":"1","visible": true,"placeholder":"Please enter the number of instances","pattern":"^[1-9]\\d*$","description":"Please enter the number of instances"}'# 不固定，根据baseline提供的渲染
     #sentinelPorts: '{"type":"expose","label":"哨兵端口","ref":"sentinel*1","size":"1","visible": true,"placeholder":"请输入端口号，点击回车进行添加","pattern":"^[1-9]\\d*$","description":"请输入合法端口号"}'# 不固定，根据baseline提供的渲染
     sentinelPorts: |
       {
         "type": "expose",
-        "label": "哨兵端口",
+        "label": "Redis Sentinel Port",
         "size": "1",
         "ref": "${#spec['necessary']['resource']['sentinel']['deployMethod'] == 'deployment' ? 'sentinel' : 'sentinel*1'}",
-        "placeholder": "请输入端口号，点击回车进行添加",
+        "placeholder": "Please enter the number of instances",
         "pattern": "^[1-9]\\d*$",
-        "description": "请输入合法端口号"
+        "description": "Please enter the number of instances"
       }
     protocol: '{"type":"enum","label":"协议","required":true,"options":"TCP","visible": true}' # 协议
   steps:
