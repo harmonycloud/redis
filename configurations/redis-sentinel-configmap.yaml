@@ -1,20 +1,26 @@
-{{ if eq .Values.type "sentinel" }}
-apiVersion: v1
-kind: ConfigMap
+apiVersion: middleware.cn/v1
+kind: MiddlewareConfiguration
 metadata:
-  name: {{ include "redis.fullname" . }}-sentinel-config
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: {{ include "redis.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: sentinel
-data:
-  sentinel.conf: |
-    port {{ .Values.sentinel.port }}
-    sentinel monitor mymaster 127.0.0.1 {{ .Values.redis.port }} {{ div .Values.sentinel.replicas 2 | add 1 }}
-    sentinel down-after-milliseconds mymaster {{ .Values.sentinel.downAfterMilliseconds | default 5000 }}
-    sentinel failover-timeout mymaster {{ .Values.sentinel.failoverTimeout | default 180000 }}
-    sentinel parallel-syncs mymaster {{ .Values.sentinel.parallelSyncs | default 1 }}
-    sentinel auth-pass mymaster {{ .Values.redisPassword | default "" }}
-    requirepass {{ .Values.redisPassword | default "" }}`
-{{ end }}
+  name: redis-sentinel-configmap
+spec:
+  template: |
+    {{ if eq .Values.type "sentinel" }}
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: {{ .Globe.Name }}-sentinel-config
+      namespace: {{ .Globe.Namespace }}
+      labels:
+        app.kubernetes.io/name: {{ .Globe.Name }}
+        app.kubernetes.io/instance: {{ .Globe.Name }}
+        app.kubernetes.io/component: sentinel
+    data:
+      sentinel.conf: |
+        port {{ .Values.sentinel.port }}
+        sentinel monitor mymaster 127.0.0.1 {{ .Values.redis.port }} {{ div .Values.sentinel.replicas 2 | add 1 }}
+        sentinel down-after-milliseconds mymaster {{ .Values.sentinel.downAfterMilliseconds | default 5000 }}
+        sentinel failover-timeout mymaster {{ .Values.sentinel.failoverTimeout | default 180000 }}
+        sentinel parallel-syncs mymaster {{ .Values.sentinel.parallelSyncs | default 1 }}
+        sentinel auth-pass mymaster {{ .Values.redisPassword | default "" }}
+        requirepass {{ .Values.redisPassword | default "" }}`
+    {{ end }}
