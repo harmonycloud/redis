@@ -4,6 +4,7 @@ metadata:
   name: redis-operator-servicemonitor
 spec:
   template: |
+    {{- if  .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
     apiVersion: monitoring.coreos.com/v1
     kind: ServiceMonitor
     metadata:
@@ -18,3 +19,4 @@ spec:
         matchLabels:
           app.kubernetes.io/name: redis-operator
           app.kubernetes.io/instance: {{ .Globe.Name }}
+    {{- end }}
