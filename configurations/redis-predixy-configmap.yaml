@@ -1,0 +1,85 @@
+{{ if .Values.predixy.enableProxy }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "redis.fullname" . }}-predixy
+  labels:
+    app.kubernetes.io/name: {{ include "redis.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: predixy
+data:
+  predixy.conf: |
+    {{- $password := .Values.redisPassword }}
+    Name {{ include "redis.fullname" . }}-predixy
+    Bind 0.0.0.0:{{ .Values.predixy.port }}
+    WorkerThreads {{ .Values.predixy.workerThreads | default 1 }}}}
+    ClientTimeout {{ index .Values.predixy.args "client-timeout" | default 30000 }}
+    BufSize {{ index .Values.predixy.args "buf-size" | default 1024 }}
+    MaxMemory {{ index .Values.predixy.args "max-memory" | default 0 }}
+    LogVerbSample 0
+    LogDebugSample 0
+    LogInfoSample 10000
+    LogNoticeSample 0
+    LogWarnSample 1
+    LogErrorSample 1
+
+    Authority {
+        Auth "{{ .Values.redisPassword }}" {
+            Mode admin
+        }
+    }
+
+    {{ if eq .Values.type "cluster" }}
+    ClusterServerPool {
+        Password {{ $password }}
+        MasterReadPriority {{ index .Values.predixy.args "master-read-priority" | default 60 }}
+        StaticSlaveReadPriority {{ index .Values.predixy.args "static-slave-read-priority" | default 50 }}
+        DynamicSlaveReadPriority {{ index .Values.predixy.args "dynamic-slave-read-priority" | default 50 }}
+        RefreshInterval {{ index .Values.predixy.args "refresh-interval" | default 1 }}
+        ServerTimeout {{ index .Values.predixy.args "server-timeout" | default 1 }}
+        ServerFailureLimit {{ index .Values.predixy.args "server-failure-limit" | default 1000000000 }}
+        ServerRetryTimeout {{ index .Values.predixy.args "server-retry-timeout" | default 1 }}
+        KeepAlive {{ index .Values.predixy.args "keep-alive" | default 120 }}
+        Servers {
+            + {{ include "redis.fullname" $ }}:{{ $.Values.redis.port }}
+        }
+    }
+    {{ end }}
+    {{ if eq .Values.type "sentinel" }}
+    SentinelServerPool {
+        Password {{ $password }}
+        Databases 16
+        Hash crc16
+        Distribution modula
+        MasterReadPriority {{ index .Values.predixy.args "master-read-priority" | default 60 }}
+        StaticSlaveReadPriority {{ index .Values.predixy.args "static-slave-read-priority" | default 50 }}
+        DynamicSlaveReadPriority {{ index .Values.predixy.args "dynamic-slave-read-priority" | default 50 }}
+        RefreshInterval {{ index .Values.predixy.args "refresh-interval" | default 1 }}
+        ServerTimeout {{ index .Values.predixy.args "server-timeout" | default 1 }}
+        ServerFailureLimit {{ index .Values.predixy.args "server-failure-limit" | default 1000000000 }}
+        ServerRetryTimeout {{ index .Values.predixy.args "server-retry-timeout" | default 1 }}
+        KeepAlive {{ index .Values.predixy.args "keep-alive" | default 120 }}
+        Sentinels {
+            + {{ $password }}@{{ include "redis.fullname" . }}-sentinel:{{ .Values.sentinel.port }}
+        }
+
+        {{- range $i := until (int .Values.redis.replicas) }}
+        Group mymaster{{ $i }}{
+        }
+        {{- end }}
+    }
+    {{-  end }}
+
+    CustomCommand {
+        nokeys {
+            Mode keyAt2
+            MinArgs 2
+            MaxArgs 3
+        }
+        keys {
+            MinArgs 2
+            MaxArgs 3
+        }
+    }
+
+{{ end }}
