@@ -6,7 +6,7 @@ metadata:
     nephele/user: admin
   annotations:
     datapath: '{{ printf "/data/redis/cluster.local/%s/%s/{POD_NAME}/data" .Globe.Namespace .Globe.Name }}'
-    baselineName: "Sentinel Proxy Mode A/A"
+    baselineName: "Sentinel Proxy Mode A-A"
     description: "Sentinel Proxy mode,incorporating core functionality and essential dependencies, is tailored for rapid deployment and fundamental application scenarios. It delivers stable and reliable performance, and is designed for ease of extension and maintenance."
     active: "2"
 spec:

@@ -1,5 +1,5 @@
 name: Redis # 中间件类型
-version: 2.18.0-1.0.0 # 版本号
+version: 2.18.0-1.0.1 # 版本号
 app:
   version: # 中间件支持版本
     - "7.2.11"
