@@ -27,22 +27,22 @@ spec:
     resource:
       redis:
         limits:
-          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core","placeholder":"Please enter a custom quota, the unit is `Core","default":"1"}'
-          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4"}'
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core","placeholder":"Please enter a custom quota, the unit is `Core","default":"1","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
+          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
         requests:
-          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core","placeholder":"Please enter a custom quota, the unit is `Core","default":"1"}'
-          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4"}'
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core","placeholder":"Please enter a custom quota, the unit is `Core","default":"1","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
+          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
         replicas: '{"type":"int","label":"Replicas","required":true,"description":"Minimum number of shards is 3","default":6,"pattern":"^[1-9]\\d*$","placeholder":"Please enter the number of instances"}'
         volume:
           size: '{"type":"int","label":"StorageSize","required":true,"description":"The number of instances you entered is invalid. The minimum number of instances is 1. Please adjust and resubmit","pattern":"^[1-9]\\d*$","placeholder":"Please enter the storage size"}'
           storageClass: '{"type":"storageClass","label":"StorageClass","required":true,"description":"Please select storage","placeholder":"Please select storage"}'
       predixy:
         limits:
-          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core","placeholder":"Please enter a custom quota, the unit is `Core","default":"1"}'
-          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4"}'
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core","placeholder":"Please enter a custom quota, the unit is `Core","default":"1","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
+          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
         requests:
-          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core","placeholder":"Please enter a custom quota, the unit is `Core","default":"1"}'
-          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4"}'
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core","placeholder":"Please enter a custom quota, the unit is `Core","default":"1","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
+          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
   preActions:
     - name: pre-redis-heimdallr-hdpool
       parameters:
