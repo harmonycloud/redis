@@ -23,7 +23,7 @@ spec:
         "label": "Redis Sentinel Port",
         "size": "1",
         "ref": "${#spec['necessary']['resource']['sentinel']['deployMethod'] == 'deployment' ? 'sentinel' : 'sentinel*1'}",
-        "placeholder": "Please enter the number of instances",
+        "placeholder": "Please enter the port number and press Enter to add it.",
         "pattern": "^[1-9]\\d*$",
         "description": "Please enter the number of instances"
       }
