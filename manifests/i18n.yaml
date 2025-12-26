@@ -111,7 +111,7 @@ actionAliasName:
     name-zh: "主从切换"
   - name: "Automatic switch"
     name-zh: "自动切换"
-  - name: "Restart"
+  - name: "Middleware Restart"
     name-zh: "服务重启"
   - name: "Services Exposure-External Access"
     name-zh: "服务暴露-集群外访问"
