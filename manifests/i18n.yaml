@@ -49,7 +49,7 @@ description:
     name-zh: "请输入存储大小"
   - name: "Please select storage"
     name-zh: "请选择存储"
-  - name: "Please enter a password consisting of letters, numbers, or the special characters /, ~, %, _, ., with a length between 1 and 32 characters."
+  - name: "Please enter a password consisting of letters, numbers, or the special characters \"/, ~, %, _, .\", with a length between 1 and 32 characters."
     name-zh: "请输入由英文字母、数字或特殊字符“/、~、%、_、.”组成且长度在1-32个字符范围内的密码信息"
   - name: "Please enter a valid port number"
     name-zh: "请输入合法端口号"
