@@ -186,7 +186,7 @@ spec:
           harmonycloud.cn/statefulset: "{{ .Globe.Name }}"
           middleware: redis
           nephele/user: admin
-        middlewareImage: '{{- $v := .Necessary.version -}}
+        middlewareImage: '"{{- $v := .Necessary.version -}}
   {{- $mid := "port" -}}
   {{- $suffix := "-1.0.0" -}}
   {{- if eq $v "5.0.8" }}{{ $mid = "v5-port" }}{{ $suffix = "-1.1.1" -}}
@@ -199,7 +199,7 @@ spec:
   {{- else if eq $v "8.2.2" }}{{ $v = (printf "v%s" $v) }}{{ $suffix = "-1.0.0-redis" -}}
   {{- else if eq $v "8.2.3" }}{{ $suffix = "" -}}
   {{- end -}}
-  {{- printf "redis-cli-%s:%s%s" $mid $v $suffix -}}'
+  {{- printf "redis-cli-%s:%s%s" $mid $v $suffix -}}"'
         initImage: "redis-init:v1.7.4"
         monitorImage: "redis-exporter:v1.0.5-1.1.0"
         logrotateImage: "logrotate:3.21.0-1.0.0"
