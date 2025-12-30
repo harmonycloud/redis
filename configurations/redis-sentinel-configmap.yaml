@@ -5,6 +5,10 @@ metadata:
 spec:
   template: |
     {{ if eq .Values.type "sentinel" }}
+    {{- $password := .Values.redisPassword -}}
+    {{- if .Values.encodePassword -}}
+    {{- $password = (b64dec .Values.encodePassword) | default .Values.redisPassword -}}
+    {{- end -}}
     apiVersion: v1
     kind: ConfigMap
     metadata:
@@ -21,6 +25,6 @@ spec:
         sentinel down-after-milliseconds mymaster {{ .Values.sentinel.downAfterMilliseconds | default 5000 }}
         sentinel failover-timeout mymaster {{ .Values.sentinel.failoverTimeout | default 180000 }}
         sentinel parallel-syncs mymaster {{ .Values.sentinel.parallelSyncs | default 1 }}
-        sentinel auth-pass mymaster {{ .Values.redisPassword | default "" }}
-        requirepass {{ .Values.redisPassword | default "" }}`
+        sentinel auth-pass mymaster {{ $password }}
+        requirepass {{ $password }}
     {{ end }}
