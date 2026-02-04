@@ -20,7 +20,7 @@ spec:
     sentinelPorts: |
       {
         "type": "expose",
-        "label": "Redis Sentinel Port",
+        "label": "Sentinel Port",
         "size": "1",
         "ref": "${#spec['necessary']['resource']['sentinel']['deployMethod'] == 'deployment' ? 'sentinel' : 'sentinel*1'}",
         "placeholder": "Please enter the port number and press Enter to add it.",
