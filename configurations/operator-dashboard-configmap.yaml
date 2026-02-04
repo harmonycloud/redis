@@ -664,7 +664,7 @@ spec:
           "uid": "dHlrS1PVz",
           "version": 1,
           "dataServiceSort": 2,
-          "supportedBaselines": [ "redis-cluster-proxy", "redis-sentinel-active", "redis-sentinel-proxy", "redis-sentinel-proxy-active"]
+          "supportedBaselines": [ "redis-cluster-proxy", "redis-sentinel-proxy", "redis-sentinel-proxy-active"]
         }
       Redis.json: |-
         {
