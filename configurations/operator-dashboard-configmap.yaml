@@ -3206,7 +3206,7 @@ spec:
             ]
           },
           "timezone": "",
-          "title": "Redis cluster",
+          "title": "Redis DataBase",
           "uid": "2hfoTb2Vz",
           "version": 2,
           "dataServiceSort": 1,
