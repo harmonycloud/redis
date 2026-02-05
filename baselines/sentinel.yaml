@@ -58,12 +58,6 @@ spec:
             ]
           }
   preActions:
-    - name: pre-redis-heimdallr-hdpool
-      parameters:
-        networkCardList: []
-        annotations: {}
-      fixed: false
-      exposed: true
     - name: pre-redis-alertrule-labels
       parameters:
         labels: {}
