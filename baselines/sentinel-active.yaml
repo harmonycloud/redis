@@ -168,7 +168,7 @@ spec:
         initImage: "redis-init:v1.7.4"
         monitorImage: "redis-exporter:v1.0.5-1.1.0"
         logrotateImage: "logrotate:3.21.0-1.0.0"
-        requirepass: "{{ .Necessary.password }}"
+        requirepass: '"{{ .Necessary.password }}"'
         imagePullPolicy: IfNotPresent
         hostNetwork: false
         resources:
@@ -220,7 +220,7 @@ spec:
       values:
         redis:
           port: "{{ .Parameters.servicePort }}"
-        redisPassword: "{{ (index .Parameters.pod 0).requirepass }}"
+        redisPassword: '"{{ (index .Parameters.pod 0).requirepass }}"'
     - name: redis-predixy-servicemonitor
       values:
         predixy:
@@ -291,4 +291,4 @@ spec:
         #          parallelSyncs:
         redis:
           port: 6379
-        redisPassword: "{{ (index .Parameters.pod 0).requirepass }}"
+        redisPassword: '"{{ (index .Parameters.pod 0).requirepass }}"'
