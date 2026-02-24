@@ -186,8 +186,14 @@ spec:
         zset-max-ziplist-value {{ index .Values.args "zset-max-ziplist-value" | default 64 }}
         rdbcompression {{ .Values.args.rdbcompression | default "yes" }}
         requirepass {REDIS_PASS}
-        maxmemory-policy {{ index .Values.args "maxmemory-policy" | default "volatile-lru" }}
+        {{- $maxmemoryPolicy := index .Values.args "maxmemory-policy" | default "volatile-lru" -}}
+        {{ if .Values.exporter.hotKeyScan.enable }}
+        maxmemory-policy {{ replace "lru" "lfu" $maxmemoryPolicy }}
+        {{ else }}
+        maxmemory-policy {{ $maxmemoryPolicy }}
+        {{ end }}
         lfu-decay-time {{ index .Values.args "lfu-decay-time" | default 1 }}
+        lfu-log-factor {{ index .Values.args "lfu-log-factor" | default 10 }}
         cluster-replica-validity-factor {{ index .Values.args "cluster-replica-validity-factor" | default 0 }}
         lazyfree-lazy-expire {{ index .Values.args "lazyfree-lazy-expire" | default "yes" }}
         lazyfree-lazy-server-del {{ index .Values.args "lazyfree-lazy-server-del" | default "yes" }}

@@ -1,0 +1,24 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareConfiguration
+metadata:
+  name: redis-metrice-svc
+spec:
+  template: |
+    {{- if  .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: {{ .Globe.Name }}
+        component: exporter
+      name: {{ .Globe.Name }}-metrice
+    spec:
+      ports:
+      - name: metrics
+        port: 9121
+        protocol: TCP
+        targetPort: 9121
+      selector:
+        app: {{ .Globe.Name }}
+      type: ClusterIP
+    {{- end }}

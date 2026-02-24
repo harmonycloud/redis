@@ -12,7 +12,7 @@ spec:
     apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: {{ .Globe.Name }}-sentinel-config
+      name: {{ .Globe.Name }}-sentinel
       namespace: {{ .Globe.Namespace }}
       labels:
         app.kubernetes.io/name: {{ .Globe.Name }}
@@ -22,9 +22,11 @@ spec:
       sentinel.conf: |
         port {{ .Values.sentinel.port }}
         sentinel monitor mymaster 127.0.0.1 {{ .Values.redis.port }} {{ div .Values.sentinel.replicas 2 | add 1 }}
-        sentinel down-after-milliseconds mymaster {{ .Values.sentinel.downAfterMilliseconds | default 5000 }}
-        sentinel failover-timeout mymaster {{ .Values.sentinel.failoverTimeout | default 180000 }}
-        sentinel parallel-syncs mymaster {{ .Values.sentinel.parallelSyncs | default 1 }}
+        sentinel down-after-milliseconds mymaster {{ .Values.sentinel.args.downAfterMilliseconds | default 1000 }}
+        sentinel failover-timeout mymaster {{ .Values.sentinel.args.failoverTimeout | default 3000 }}
+        sentinel parallel-syncs mymaster {{ .Values.sentinel.args.parallelSyncs | default 2 }}
         sentinel auth-pass mymaster {{ $password }}
+        {{- if .Values.sentinel.auth }}
         requirepass {{ $password }}
+        {{- end }}
     {{ end }}

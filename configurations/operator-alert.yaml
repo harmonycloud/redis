@@ -16,7 +16,7 @@ spec:
         target_alias_name: 平台系统监控
         target_name: platform
         target_type: system
-      name: redis-operator-rules
+      name: {{ .Globe.Name }}-rules
     spec:
       groups:
         - name: middleware-rules

@@ -234,13 +234,19 @@ spec:
         spec:
           containers:
             - name: "{{ .Globe.Name }}"
-              image: '{{ if ne .Globe.repository "" }}{{ .Globe.repository }}/{{ end }}{{ .Globe.project }}/redis-operator:v2.18.2'
+              image: '{{ if ne .Globe.repository "" }}{{ .Globe.repository }}/{{ end }}{{ .Globe.project }}/redis-operator:v2.19.0'
               command:
                 - /manager
                 - --v=5
                 - --leader-elect=true
                 - --enable-redis-shake=false
                 - --workers=8
+#                {{- if eq .Values.scope "namespace" }}
+#                - --namespace={{ .Release.Namespace }}
+#                {{- else if eq .Values.scope "instance" }}
+#                - --label-selector=app.kubernetes.io/instance={{ .Values.bindInstance | default .Release.Name }}
+#                - --namespace={{ .Release.Namespace }}
+#                {{- end }}
               imagePullPolicy: IfNotPresent
               env:
                 - name: TZ
@@ -276,8 +282,8 @@ spec:
                   cpu: 200m
                   memory: 512Mi
                 requests:
-                  cpu: 100m
-                  memory: 256Mi
+                  cpu: 200m
+                  memory: 512Mi
           affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:

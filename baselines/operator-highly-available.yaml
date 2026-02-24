@@ -234,7 +234,7 @@ spec:
         spec:
           containers:
             - name: "{{ .Globe.Name }}"
-              image: '{{ if ne .Globe.repository "" }}{{ .Globe.repository }}/{{ end }}{{ .Globe.project }}/redis-operator:v2.18.2'
+              image: '{{ if ne .Globe.repository "" }}{{ .Globe.repository }}/{{ end }}{{ .Globe.project }}/redis-operator:v2.19.0'
               command:
                 - /manager
                 - --v=5
@@ -276,8 +276,8 @@ spec:
                   cpu: 200m
                   memory: 512Mi
                 requests:
-                  cpu: 100m
-                  memory: 256Mi
+                  cpu: 200m
+                  memory: 512Mi
           affinity: { }
           serviceAccount: "{{ .Globe.Name }}-redis-operator"
   configurations:

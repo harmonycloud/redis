@@ -4,6 +4,7 @@ metadata:
   name: redis-sentinel-proxy
   labels:
     nephele/user: admin
+    app.kubernetes.io/instance: "{{ .Globe.Name }}"
   annotations:
     datapath: '{{ printf "/data/redis/cluster.local/%s/%s/{POD_NAME}/data" .Globe.Namespace .Globe.Name }}'
     baselineName: "Sentinel Proxy Mode"
@@ -94,7 +95,7 @@ spec:
     type: sentinel
     predixy:
       image: "predixy:v1.0.4"
-      exporterImage: "predixy-exporter:v0.0.2-1.0.0"
+      exporterImage: "predixy-exporter:v0.0.2-1.1.0"
       affinity:
       args: { }
       enableProxy: true
@@ -192,11 +193,11 @@ spec:
     {{- if le $v "7.2.8" }}{{ $mid = "v7-port" }}{{ end -}}
     {{- if or (eq $v "7.0.12") (eq $v "7.2.4") }}{{ $suffix = "-1.2.0" }}{{ end -}}
   {{- else if eq $v "8.2.2" }}{{ $v = (printf "v%s" $v) }}{{ $suffix = "-1.0.0-redis" -}}
-  {{- else if eq $v "8.2.3" }}{{ $suffix = "" -}}
+  {{- else if eq $v "8.2.3" }}{{ $v = (printf "v%s" $v) }}{{ $suffix = "-1.0.0-redis" -}}
   {{- end -}}
   {{- printf "redis-cli-%s:%s%s" $mid $v $suffix -}}"'
         initImage: "redis-init:v1.7.4"
-        monitorImage: "redis-exporter:v1.0.5-1.1.0"
+        monitorImage: "redis-exporter:v1.0.5-1.3.0"
         logrotateImage: "logrotate:3.21.0-1.0.0"
         requirepass: '"{{ .Necessary.password }}"'
         imagePullPolicy: IfNotPresent
@@ -214,14 +215,14 @@ spec:
       port: 9121
       sentinelPort: 9121
       hotKeyScan:
-        enable: true
-        interval: 3600
-        hotkeyThreshold: 2
+        enable: false
+        interval: 86400
+        hotkeyThreshold: 18
         hotKeylen: 100
       rdbScan:
-        enable: true
-        interval: 3600
-        bigKeyThreshold: 1024
+        enable: false
+        interval: 86400
+        bigKeyThreshold: 1048576
         bigKeyLen: 100
         filePath: "/data/redis/cluster.local/{{ .Globe.Namespace }}/{{ .Globe.Name }}/{POD_NAME}/data"
       envs:
@@ -297,6 +298,12 @@ spec:
             - KEYS NOKEYS
             - FLUSHDB ""
             - FLUSHALL ""
+        exporter:
+          hotKeyScan:
+            enable: false
+            interval: 86400
+            hotkeyThreshold: 18
+            hotKeylen: 100
     - name: redis-sc
       values:
         type: "{{ .Parameters.type }}"
@@ -339,11 +346,15 @@ spec:
       values:
         type: "sentinel"
         sentinel:
+          auth: false
           port: 26379
           replicas: "{{ .Necessary.resource.sentinel.replicas }}"
-        #          downAfterMilliseconds:
-        #          failoverTimeout:
-        #          parallelSyncs:
+          args:
+#            downAfterMilliseconds:
+#            failoverTimeout:
+#            parallelSyncs:
         redis:
           port: 6379
         redisPassword: '"{{ (index .Parameters.pod 0).requirepass }}"'
+    - name: redis-metrice-svc
+      values: { }
