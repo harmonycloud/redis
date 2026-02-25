@@ -349,9 +349,9 @@ spec:
           port: 26379
           replicas: "{{ .Necessary.resource.sentinel.replicas }}"
           args:
-#            downAfterMilliseconds:
-#            failoverTimeout:
-#            parallelSyncs:
+            downAfterMilliseconds:
+            failoverTimeout:
+            parallelSyncs:
         redis:
           port: 6379
         redisPassword: '"{{ (index .Parameters.pod 0).requirepass }}"'
