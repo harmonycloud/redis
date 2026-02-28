@@ -52,12 +52,13 @@ spec:
               ]
               {{- end }}
               {{- end }}
-              {{- if .Parameters.predixy }}
+              {{- if hasKey .Parameters "predixy" }}
               predixy: {
                 {{- with .Necessary.tolerations }}
                 tolerations: {{ toCue . }}
                 {{- end }}
               }
+              {{- end }}
               {{- end }}
             }
           }

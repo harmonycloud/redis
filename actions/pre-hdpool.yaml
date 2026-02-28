@@ -41,11 +41,13 @@ spec:
                   }
                 }
               }
+              {{- if hasKey .Parameters "predixy" }}
               predixy: {
                 {{- with .Necessary.annotations }}
                 annotations: {{ toCue . }}
                 {{- end }}
               }
+              {{- end }}
               {{- end }}
             }
           }
