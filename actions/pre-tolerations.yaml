@@ -59,7 +59,6 @@ spec:
                 {{- end }}
               }
               {{- end }}
-              {{- end }}
             }
           }
           resource: {
