@@ -1,0 +1,37 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareActionBaseline
+metadata:
+  name: redis-scale
+  annotations:
+    alias: "Instance Scaling"
+spec:
+  baselineType: "OpsAction"
+  actionType: "scale"
+  necessary: {}
+  steps:
+    - name: isExposed
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - |
+            # 判断 annotations 中是否存在 middleware.cn/exposeNecessary 字段
+            output=$(kubectl get mid -n {{ .Global.Namespace }} {{ .Global.MiddlewareName }} -o jsonpath='{.metadata.annotations.middleware\.cn/exposeNecessary}' | base64 -d | grep exposeType)
+            if [ -z "$output" ]; then
+              echo "false"
+            else
+              echo "true"
+            fi
+    - name: scale
+      cmd:
+        command:
+          - |
+            # 判断是否已经暴露
+            if [ "{{ .Step.isExposed.output }}" == "true" ]; then
+              echo "already exposed"
+              exit 1
+            else
+              echo "not exposed"
+              kubectl patch mid {{ .Global.MiddlewareName }} -n {{ .Global.Namespace }} --type=merge -p '{"spec":{"necessary":{"resource":{{ toJson .Necessary.resource }}}}}'
+            fi
