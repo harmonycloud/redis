@@ -17,7 +17,7 @@ spec:
         command:
           - |
             # 判断 annotations 中是否存在 middleware.cn/exposeNecessary 字段
-            output=$(kubectl get mid -n {{ .Global.Namespace }} {{ .Global.MiddlewareName }} -o jsonpath='{.metadata.annotations.middleware\.cn/exposeNecessary}' | base64 -d | grep exposeType)
+            output=$(kubectl get mid -n {{ .Globe.Namespace }} {{ .Globe.MiddlewareName }} -o jsonpath='{.metadata.annotations.middleware\.cn/exposeNecessary}' | base64 -d | grep exposeType)
             if [ -z "$output" ]; then
               echo "false"
             else
@@ -33,5 +33,5 @@ spec:
               exit 1
             else
               echo "not exposed"
-              kubectl patch mid {{ .Global.MiddlewareName }} -n {{ .Global.Namespace }} --type=merge -p '{"spec":{"necessary":{"resource":{{ toJson .Necessary.resource }}}}}'
+              kubectl patch mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} --type=merge -p '{"spec":{"necessary":{"resource":{{ toJson .Necessary.resource }}}}}'
             fi
