@@ -5,7 +5,7 @@ metadata:
   annotations:
     alias: "Instance Scaling"
 spec:
-  baselineType: "OpsAction"
+  baselineType: "NormalAction"
   actionType: "scale"
   necessary: {}
   steps:
