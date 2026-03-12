@@ -29,7 +29,7 @@ spec:
           - |
             # 判断是否已经暴露
             if [ "{{ .Step.isExposed.output }}" == "true" ]; then
-              echo "already exposed"
+              echo "Service exposure detected. Horizontal scaling is currently unavailable. Please delete and retry."
               exit 1
             else
               echo "not exposed"
