@@ -55,6 +55,10 @@ description:
     name-zh: "请输入合法端口号"
   - name: "Minimum storage size is 1"
     name-zh: "存储大小最低为1"
+  - name: "Please enter a password consisting of English letters, numbers, or the special characters \"/ ~ % _ . ^ + = - [ ] : ,\""
+    name-zh: "由英文字母、数字或特殊字符“/ ~ % _ . ^ + = - [ ] : ,”组成的密码信息"
+  - name: "Password length must be between 1 and 32 characters"
+    name-zh: "长度需要1-32之间"
 
 placeholder:
   - name: "Please enter a custom quota, the unit is `Gi`"

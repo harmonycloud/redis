@@ -17,15 +17,34 @@ spec:
   necessary:
     repository: ""
     version: '{"type":"version","label":"Version","required":true,"default":"8.2.3"}'
+#    password: |
+#      {
+#        "type": "password",
+#        "label": "AdminPassword",
+#        "required": true,
+#        "description": "Please enter a password consisting of English letters, numbers, or the special characters \"/ ~ % _ . ^ + = - [ ] :\", with a length between 1 and 32 characters.",
+#        "placeholder": "Enter your admin password",
+#        "pattern": "^[A-Za-z0-9~_./%^+=:\\-\\[\\]]{1,32}$"
+#       }
     password: |
       {
         "type": "password",
         "label": "AdminPassword",
         "required": true,
-        "description": "Please enter a password consisting of English letters, numbers, or the special characters \"/ ~ % _ . ^ + = - [ ] :\", with a length between 1 and 32 characters.",
-        "placeholder": "Enter your admin password",
-        "pattern": "^[A-Za-z0-9~_./%^+=:\\-\\[\\]]{1,32}$"
-       }
+        "patterns": [
+          {
+            "pattern": "^[A-Za-z0-9~_./%^+=:\\-\\[\\],]+$",
+            "description": "Please enter a password consisting of English letters, numbers, or the special characters \"/ ~ % _ . ^ + = - [ ] : ,\""
+          },
+          {
+            "pattern": "^.{1,32}$",
+            "description": "Password length must be between 1 and 32 characters"
+          }
+        ],
+        "pattern": "^[A-Za-z0-9~_./%^+=:\\-\\[\\],]*$",
+        "description": "Please enter a password consisting of English letters, numbers, or the special characters \"/ ~ % _ . ^ + = - [ ] : ,\"",
+        "placeholder": "Enter your admin password"
+      }
     resource:
       redis:
         limits:
