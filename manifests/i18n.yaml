@@ -109,6 +109,8 @@ label:
     name-zh: "无状态部署"
   - name: "StatefulSet"
     name-zh: "有状态部署"
+  - name: "sentinelAuth"
+    name-zh: "哨兵认证"
 
 actionAliasName:
   - name: "MasterSlaveSwitchover"

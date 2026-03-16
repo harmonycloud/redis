@@ -25,6 +25,7 @@ spec:
 #        "placeholder": "Enter your admin password",
 #        "pattern": "^[A-Za-z0-9~_./%^+=:\\-\\[\\]]{1,32}$"
 #       }
+    sentinelAuth: '{"type":"boolean","label":"sentinelAuth","required":true,"default":false}'
     password: |
       {
         "type": "password",
@@ -365,7 +366,7 @@ spec:
       values:
         type: "sentinel"
         sentinel:
-          auth: false
+          auth: "{{ .Necessary.sentinelAuth }}"
           port: 26379
           replicas: "{{ .Necessary.resource.sentinel.replicas }}"
           args:
