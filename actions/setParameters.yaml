@@ -28,7 +28,7 @@ spec:
           - "{{ .Globe.Namespace }}"
           - "{{ .Globe.MiddlewareName }}"
           - "-o"
-          - 'jsonpath=''{.status.customResources.include.pods[?(@.type!="proxy" && @.type!="sentinel")].name}'''
+          - 'jsonpath=''{.status.customResources.include.pods[?(@.type!="proxy")][?(@.type!="sentinel")].name}'''
     - name: getPassword
       output:
         type: "string"
