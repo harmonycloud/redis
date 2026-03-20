@@ -54,7 +54,9 @@ spec:
             # 把参数拼接为 set globe key1 value1;set globe key2 value2;...
             {{- $setParametersString := "" }}
             {{- range $param := .Necessary.parameters }}
-            {{- $setParametersString = printf "redis-cli -h 127.0.0.1 -p 6379 -a {{ $.Step.getPassword.output }} config set %s '%s' ;" $setParametersString (index $param "key") (index $param "value") }}
+            {{- $value := index $param "value" }}
+            {{- $key := index $param "key" }}
+            {{- $setParametersString = printf "redis-cli -h 127.0.0.1 -p 6379 -a {{ $.Step.getPassword.output }} config set %s '%s' ;" $key $value }}
             {{- end }}
             {{- range $podName := $podNames }}
             kubectl exec {{ $podName }} -n {{ $.Globe.Namespace }} -c redis-cluster -- bash -c '{{ $setParametersString }}'
