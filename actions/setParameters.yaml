@@ -56,7 +56,7 @@ spec:
             {{- range $param := .Necessary.parameters }}
             {{- $value := index $param "value" }}
             {{- $key := index $param "key" }}
-            {{- $setParametersString = printf "redis-cli -h 127.0.0.1 -p 6379 -a {{ $.Step.getPassword.output }} config set %s '%s' ;" $key $value }}
+            {{- $setParametersString = printf "%sredis-cli -h $PODIP -p $REDIS_INSTANCE_PORT -a {{ $.Step.getPassword.output }} config set %s '%s' ;" $setParametersString $key $value }}
             {{- end }}
             {{- range $podName := $podNames }}
             kubectl exec {{ $podName }} -n {{ $.Globe.Namespace }} -c redis-cluster -- bash -c '{{ $setParametersString }}'
