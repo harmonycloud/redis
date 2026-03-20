@@ -60,6 +60,6 @@ spec:
             {{- end }}
             {{- range $podName := $podNames }}
             {{- if ne $podName "" }}
-            kubectl exec {{ $podName }} -n {{ $.Globe.Namespace }} -c redis-cluster -- bash -c ''{{ $setParametersString }}''
+            kubectl exec {{ $podName }} -n {{ $.Globe.Namespace }} -c redis-cluster -- bash -c '{{ $setParametersString }}'
             {{- end }}
             {{- end }}
