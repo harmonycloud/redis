@@ -16,6 +16,9 @@ spec:
       cmd:
         command:
           - |
+            {{- if or (eq .Necessary.scaleType "vertical") (eq .Necessary.role "sentinel") }}
+            echo "false"
+            {{- else }}
             # 判断 annotations 中是否存在 middleware.cn/exposeNecessary 字段
             output=$(kubectl get mid -n {{ .Globe.Namespace }} {{ .Globe.MiddlewareName }} -o jsonpath='{.metadata.annotations.middleware\.cn/exposeNecessary}' | base64 -d | grep exposeType)
             if [ -z "$output" ]; then
@@ -23,6 +26,7 @@ spec:
             else
               echo "true"
             fi
+            {{- end }}
     - name: scale
       cmd:
         command:
