@@ -72,13 +72,13 @@ placeholder:
   - name: "Please enter the number of instances"
     name-zh: "请输入实例数"
   - name: "Enter your admin password"
-    name-zh: "输入管理员账户密码"
+    name-zh: "请输入管理员账户密码"
   - name: "Please enter the port number and press Enter to add it."
     name-zh: "请输入端口号，点击回车进行添加"
 
 label:
   - name: "Administrator password"
-    name-zh: "管理员账号密码"
+    name-zh: "管理员账户密码"
   - name: "Memory"
     name-zh: "内存"
   - name: "Replicas"
