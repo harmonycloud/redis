@@ -98,19 +98,51 @@ spec:
           middleware: redis
           nephele/user: admin
         middlewareImage: '"{{- $v := .Necessary.version -}}
-  {{- $mid := "port" -}}
-  {{- $suffix := "-1.0.0" -}}
-  {{- if eq $v "5.0.8" }}{{ $mid = "v5-port" }}{{ $suffix = "-1.1.1" -}}
-  {{- else if hasPrefix "6.2." $v }}
-    {{- if le $v "6.2.18" }}{{ $mid = "v6-port" }}{{ end -}}
-    {{- if le $v "6.2.14" }}{{ $suffix = "-1.2.0" }}{{ end -}}
-  {{- else if or (hasPrefix "7.0." $v) (hasPrefix "7.2." $v) }}
-    {{- if le $v "7.2.8" }}{{ $mid = "v7-port" }}{{ end -}}
-    {{- if or (eq $v "7.0.12") (eq $v "7.2.4") }}{{ $suffix = "-1.2.0" }}{{ end -}}
-  {{- else if eq $v "8.2.2" }}{{ $v = (printf "v%s" $v) }}{{ $suffix = "-1.0.0-redis" -}}
-  {{- else if eq $v "8.2.3" }}{{ $v = (printf "v%s" $v) }}{{ $suffix = "-1.0.0-redis" -}}
-  {{- end -}}
-  {{- printf "redis-cli-%s:%s%s" $mid $v $suffix -}}"'
+        {{- $image := dict -}}
+        {{- $_ := set $image "redisImageTag" "5.0.8-1.1.1" -}}
+        {{- $_ := set $image "redisImageTag_6" "6.2.6-1.2.0" -}}
+        {{- $_ := set $image "redisImageTag_6_11" "6.2.11-1.2.0" -}}
+        {{- $_ := set $image "redisImageTag_6_2_14" "6.2.14-1.2.0" -}}
+        {{- $_ := set $image "redisImageTag_6_2_16" "6.2.16-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_6_2_18" "6.2.18-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_6_2_19" "6.2.19-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_0_12" "7.0.12-1.2.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_4" "7.2.4-1.2.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_8" "7.2.8-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_10" "7.2.10-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_11" "7.2.11-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_4_5" "7.4.5-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_8_0_3" "8.0.3-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_8_0_4" "8.0.4-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_8_2_2" "v8.2.2-1.0.0-redis" -}}
+        {{- $_ := set $image "redisImageTag_8_2_3" "v8.2.3-1.0.0-redis" -}}
+        {{- $versionMap := dict -}}
+        {{- $_ := set $versionMap "5.0.8" (printf "redis-cli-v5-port:%s" (index $image "redisImageTag")) -}}
+        {{- $_ := set $versionMap "6.2.6" (printf "redis-cli-v6-port:%s" (index $image "redisImageTag_6")) -}}
+        {{- $_ := set $versionMap "6.2.11" (printf "redis-cli-v6-port:%s" (index $image "redisImageTag_6_11")) -}}
+        {{- $_ := set $versionMap "6.2.14" (printf "redis-cli-v6-port:%s" (index $image "redisImageTag_6_2_14")) -}}
+        {{- $_ := set $versionMap "6.2.16" (printf "redis-cli-v6-port:%s" (index $image "redisImageTag_6_2_16")) -}}
+        {{- $_ := set $versionMap "6.2.18" (printf "redis-cli-v6-port:%s" (index $image "redisImageTag_6_2_18")) -}}
+        {{- $_ := set $versionMap "6.2.19" (printf "redis-cli-port:%s" (index $image "redisImageTag_6_2_19")) -}}
+        {{- $_ := set $versionMap "7.0.12" (printf "redis-cli-v7-port:%s" (index $image "redisImageTag_7_0_12")) -}}
+        {{- $_ := set $versionMap "7.2.4" (printf "redis-cli-v7-port:%s" (index $image "redisImageTag_7_2_4")) -}}
+        {{- $_ := set $versionMap "7.2.8" (printf "redis-cli-v7-port:%s" (index $image "redisImageTag_7_2_8")) -}}
+        {{- $_ := set $versionMap "7.2.10" (printf "redis-cli-port:%s" (index $image "redisImageTag_7_2_10")) -}}
+        {{- $_ := set $versionMap "7.2.11" (printf "redis-cli-port:%s" (index $image "redisImageTag_7_2_11")) -}}
+        {{- $_ := set $versionMap "7.4.5" (printf "redis-cli-port:%s" (index $image "redisImageTag_7_4_5")) -}}
+        {{- $_ := set $versionMap "8.0.3" (printf "redis-cli-port:%s" (index $image "redisImageTag_8_0_3")) -}}
+        {{- $_ := set $versionMap "8.0.4" (printf "redis-cli-port:%s" (index $image "redisImageTag_8_0_4")) -}}
+        {{- $_ := set $versionMap "8.2.2" (printf "redis-cli-port:%s" (index $image "redisImageTag_8_2_2")) -}}
+        {{- $_ := set $versionMap "8.2.3" (printf "redis-cli-port:%s" (index $image "redisImageTag_8_2_3")) -}}
+        {{- $middlewareImage := index $versionMap $v | default "" -}}
+        {{- if not $middlewareImage -}}
+          {{- $versionUnderscore := replace "." "_" $v -}}
+          {{- $imageTagKey := printf "redisImageTag_%s" $versionUnderscore -}}
+          {{- with index $image $imageTagKey -}}
+            {{- $middlewareImage = printf "redis-cli-port:%s" . -}}
+          {{- end -}}
+        {{- end -}}
+        {{- $middlewareImage -}}"'
         initImage: "redis-init:v1.7.4"
         monitorImage: "redis-exporter:v1.0.5-1.3.0"
         logrotateImage: "logrotate:3.21.0-1.0.0"
