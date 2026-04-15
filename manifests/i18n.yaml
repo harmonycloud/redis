@@ -87,6 +87,8 @@ label:
     name-zh: "内存"
   - name: "Replicas"
     name-zh: "实例数"
+  - name: "Shards"
+    name-zh: "分片数"
   - name: "Version"
     name-zh: "版本"
 
