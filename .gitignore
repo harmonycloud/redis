@@ -1,6 +1,2 @@
 .DS_Store
-.idea/.gitignore
-.idea/material_theme_project_new.xml
-.idea/modules.xml
-.idea/redis.iml
-.idea/vcs.xml
+.idea/
