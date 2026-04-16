@@ -1,3 +1,5 @@
+[English](README.md) | [中文](README_zh.md)
+
 # Redis
 
 In-memory data structure store for Kubernetes with cluster, sentinel, and proxy deployment modes.
