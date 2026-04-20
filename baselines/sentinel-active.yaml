@@ -185,7 +185,7 @@ spec:
         {{- $_ := set $image "redisImageTag_7_2_4" "7.2.4-1.2.0" -}}
         {{- $_ := set $image "redisImageTag_7_2_8" "7.2.8-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_7_2_10" "7.2.10-1.0.0" -}}
-        {{- $_ := set $image "redisImageTag_7_2_11" "7.2.11-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_13" "7.2.13-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_7_4_5" "7.4.5-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_8_0_3" "8.0.3-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_8_0_4" "8.0.4-1.0.0" -}}
@@ -203,7 +203,7 @@ spec:
         {{- $_ := set $versionMap "7.2.4" (printf "redis-cli-v7-port:%s" (index $image "redisImageTag_7_2_4")) -}}
         {{- $_ := set $versionMap "7.2.8" (printf "redis-cli-v7-port:%s" (index $image "redisImageTag_7_2_8")) -}}
         {{- $_ := set $versionMap "7.2.10" (printf "redis-cli-port:%s" (index $image "redisImageTag_7_2_10")) -}}
-        {{- $_ := set $versionMap "7.2.11" (printf "redis-cli-port:%s" (index $image "redisImageTag_7_2_11")) -}}
+        {{- $_ := set $versionMap "7.2.13" (printf "redis-cli-port:%s" (index $image "redisImageTag_7_2_13")) -}}
         {{- $_ := set $versionMap "7.4.5" (printf "redis-cli-port:%s" (index $image "redisImageTag_7_4_5")) -}}
         {{- $_ := set $versionMap "8.0.3" (printf "redis-cli-port:%s" (index $image "redisImageTag_8_0_3")) -}}
         {{- $_ := set $versionMap "8.0.4" (printf "redis-cli-port:%s" (index $image "redisImageTag_8_0_4")) -}}
