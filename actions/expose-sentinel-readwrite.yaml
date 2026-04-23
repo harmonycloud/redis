@@ -16,6 +16,7 @@ spec:
     traefikName: '{"type":"string","label":"Load Balancer Controller","required":true,"visible": true, "update": false}'
     ports: '{"type":"expose","label":"Redis Node Port","required":true,"size":"1","visible": true,"placeholder":"Please enter the port number and press Enter to add it.","pattern":"^[1-9]\\d*$","description":"Please enter a valid port number", "update": true}'# 不固定，根据baseline提供的渲染
     protocol: '{"type":"enum","label":"protocol","required":true,"options":"TCP","visible": true, "update": false}' # 协议
+    entryPointMap: '{"type":"mulString","label":"EntryPoint Mapping","required":false,"visible": false}'
   steps:
     - name: initRollback
       output:
@@ -212,7 +213,16 @@ spec:
                 middleware.cn/sourcename: "redis-sentinel-expose-readwrite"
             spec:
               entryPoints:
+              {{- if $.Necessary.entryPointMap }}
+              {{- $ep := index $.Necessary.entryPointMap (toString $value) }}
+              {{- if $ep }}
+              - {{ $ep }}
+              {{- else }}
               - {{ $.Necessary.traefikName }}-p{{ $value }}
+              {{- end }}
+              {{- else }}
+              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              {{- end }}
               routes:
               - match: HostSNI (\`*\`)
                 services:

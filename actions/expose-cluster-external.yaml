@@ -17,6 +17,7 @@ spec:
     ports: '{"type":"expose","label":"Redis Node Port","required":true,"ref":"master*1,slave*1,","size":"1","visible": true,"placeholder":"Please enter the port number and press Enter to add it.","pattern":"^[1-9]\\d*$","description":"Please enter a valid port number"}' # 不固定，根据baseline提供的渲染
     busPorts: '{"type":"expose","label":"Redis Bus Port","required":true,"ref":"master*1,slave*1,","size":"1","visible": true,"placeholder":"Please enter the port number and press Enter to add it.","pattern":"^[1-9]\\d*$","description":"Please enter a valid port number"}' # 不固定，根据baseline提供的渲染
     protocol: '{"type":"enum","label":"protocol","required":true,"options":"TCP","visible": true}' # 协议
+    entryPointMap: '{"type":"mulString","label":"EntryPoint Mapping","required":false,"visible": false}'
   steps:
     - name: initRollback
       output:
@@ -341,7 +342,16 @@ spec:
               namespace: ${NAMESPACE}
             spec:
               entryPoints:
+              {{- if $.Necessary.entryPointMap }}
+              {{- $ep := index $.Necessary.entryPointMap (toString $value) }}
+              {{- if $ep }}
+              - {{ $ep }}
+              {{- else }}
               - {{ $.Necessary.traefikName }}-p{{ $value }}
+              {{- end }}
+              {{- else }}
+              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              {{- end }}
               routes:
               - match: HostSNI (\`*\`)
                 services:
@@ -460,7 +470,16 @@ spec:
               namespace: ${NAMESPACE}
             spec:
               entryPoints:
+              {{- if $.Necessary.entryPointMap }}
+              {{- $ep := index $.Necessary.entryPointMap (toString $value) }}
+              {{- if $ep }}
+              - {{ $ep }}
+              {{- else }}
               - {{ $.Necessary.traefikName }}-p{{ $value }}
+              {{- end }}
+              {{- else }}
+              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              {{- end }}
               routes:
               - match: HostSNI (\`*\`)
                 services:
