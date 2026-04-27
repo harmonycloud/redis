@@ -28,6 +28,7 @@ spec:
         "description": "Please enter a valid port number"
       }
     protocol: '{"type":"enum","label":"协议","required":true,"options":"TCP","visible": true}' # 协议
+    entryPointMap: '{"type":"mulString","label":"EntryPoint Mapping","required":false,"visible": false}'
   steps:
     - name: initRollback
       output:
@@ -286,7 +287,16 @@ spec:
                 middleware.cn/sourcename: "redis-sentinel-expose-external"
             spec:
               entryPoints:
+              {{- if $.Necessary.entryPointMap }}
+              {{- $ep := index $.Necessary.entryPointMap (toString $value) }}
+              {{- if $ep }}
+              - {{ $ep }}
+              {{- else }}
               - {{ $.Necessary.traefikName }}-p{{ $value }}
+              {{- end }}
+              {{- else }}
+              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              {{- end }}
               routes:
               - match: HostSNI (\`*\`)
                 services:
@@ -489,7 +499,16 @@ spec:
                 middleware.cn/sourcename: "redis-sentinel-expose-external"
             spec:
               entryPoints:
+              {{- if $.Necessary.entryPointMap }}
+              {{- $ep := index $.Necessary.entryPointMap (toString $value) }}
+              {{- if $ep }}
+              - {{ $ep }}
+              {{- else }}
               - {{ $.Necessary.traefikName }}-p{{ $value }}
+              {{- end }}
+              {{- else }}
+              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              {{- end }}
               routes:
               - match: HostSNI (\`*\`)
                 services:

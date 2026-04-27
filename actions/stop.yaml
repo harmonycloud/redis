@@ -1,0 +1,35 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareActionBaseline
+metadata:
+  name: redis-stop
+  annotations:
+    alias: "Stop"
+spec:
+  baselineType: "NormalAction"
+  actionType: "stop"
+  necessary: {}
+  steps:
+    - name: getBaselineName
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - |
+            kubectl get mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} -o jsonpath='{.metadata.labels.middleware\.cn/definition}'
+    - name: stop
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - |
+            {{- if eq .Step.getBaselineName.output "redis-cluster" -}}
+            kubectl patch mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} --type=merge -p '{"spec":{"necessary":{"resource":{"redis":{"replicas":0}}}}}'
+            {{- else if eq .Step.getBaselineName.output "redis-sentinel" -}}
+            kubectl patch mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} --type=merge -p '{"spec":{"necessary":{"resource":{"redis":{"replicas":0},"sentinel":{"replicas":0}}}}}'
+            {{- else if eq .Step.getBaselineName.output "redis-sentinel-active" -}}
+            kubectl patch mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} --type=merge -p '{"spec":{"necessary":{"resource":{"redis":{"replicas":0},"sentinel":{"replicas":0}}}}}'
+            {{- else -}}
+            kubectl patch mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} --type=merge -p '{"spec":{"necessary":{"resource":{"redis":{"replicas":0}}}}}'
+            {{- end -}}
