@@ -85,7 +85,7 @@ label:
     name-zh: "管理员账户密码"
   - name: "Memory"
     name-zh: "内存"
-  - name: "Replicas"
+  - name: "Instances"
     name-zh: "实例数"
   - name: "Shards"
     name-zh: "分片数"
