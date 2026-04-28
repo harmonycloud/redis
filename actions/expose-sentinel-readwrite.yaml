@@ -75,7 +75,7 @@ spec:
               local handle_type="${3:-create}"
               local entrypoint
 
-              entrypoint=$(kubectl get ds "$traefik_name" -n kube-system -o jsonpath='{range .spec.template.spec.containers[0].args[*]}{.}{"\n"}{end}' | \
+              entrypoint=$(kubectl get ds "$traefik_name" -n kube-system -o jsonpath='{range .spec.template.spec.containers[0].args[*]}{@}{"\n"}{end}' | \
                 awk -v port="$expose_port" '
                   $0 ~ "^--entry[Pp]oints\\.[^.]+\\.[Aa]ddress=([^:]*|\\[[^]]+\\]):" port "($|/[Tt][Cc][Pp]$|/[Uu][Dd][Pp]$)" {
                     sub(/^--entry[Pp]oints\./, "")
