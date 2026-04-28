@@ -78,7 +78,7 @@ spec:
 
               entrypoint=$(kubectl get ds "$traefik_name" -n kube-system -o jsonpath='{range .spec.template.spec.containers[0].args[*]}{@}{"\n"}{end}' | \
                 awk -v port="$expose_port" '
-                  $0 ~ "^--entry[Pp]oints\\.[^.]+\\.[Aa]ddress=([^:]*|\\[[^]]+\\]):" port "($|/[Tt][Cc][Pp]$|/[Uu][Dd][Pp]$)" {
+                  $0 ~ "^--entry[Pp]oints\\.[^.]+\\.[Aa]ddress=([^:]*|\\[[^]]+\\]):" port "($|/[Tt][Cc][Pp]$)" {
                     sub(/^--entry[Pp]oints\./, "")
                     sub(/\.[Aa]ddress=.*/, "")
                     print
