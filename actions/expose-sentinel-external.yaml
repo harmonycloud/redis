@@ -80,6 +80,36 @@ spec:
               echo "Script completed successfully, cleaning up rollback file"
               rm -f "$ROLLBACK_FILE"
             }
+
+            resolve_traefik_entrypoint() {
+              local traefik_name="$1"
+              local expose_port="$2"
+              local handle_type="${3:-create}"
+              local entrypoint
+
+              entrypoint=$(kubectl get ds "$traefik_name" -n kube-system -o jsonpath='{range .spec.template.spec.containers[0].args[*]}{.}{"\n"}{end}' | \
+                awk -v port="$expose_port" '
+                  $0 ~ "^--entry[Pp]oints\\.[^.]+\\.[Aa]ddress=([^:]*|\\[[^]]+\\]):" port "($|/[Tt][Cc][Pp]$|/[Uu][Dd][Pp]$)" {
+                    sub(/^--entry[Pp]oints\./, "")
+                    sub(/\.[Aa]ddress=.*/, "")
+                    print
+                    exit
+                  }
+                ')
+
+              if [ -n "$entrypoint" ]; then
+                printf '%s\n' "$entrypoint"
+                return 0
+              fi
+
+              if [ "$handle_type" = "delete" ]; then
+                printf '%s-p%s\n' "$traefik_name" "$expose_port"
+                return 0
+              fi
+
+              echo "Failed to resolve Traefik entryPoint for port ${expose_port} from daemonset ${traefik_name} in kube-system" >&2
+              return 1
+            }
             ROLLBACK_EOF
             
             # 设置执行权限
@@ -273,6 +303,11 @@ spec:
             {{- end }}
 
             {{- if eq $.Necessary.exposeType "Ingress" }}
+            ENTRYPOINT=$(resolve_traefik_entrypoint "{{ $.Necessary.traefikName }}" "{{ $value }}" "{{ $.Necessary.handleType }}") || {
+              execute_rollback
+              exit 1
+            }
+
             cat > /tmp/traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}-pod.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
@@ -286,7 +321,7 @@ spec:
                 middleware.cn/sourcename: "redis-sentinel-expose-external"
             spec:
               entryPoints:
-              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              - ${ENTRYPOINT}
               routes:
               - match: HostSNI (\`*\`)
                 services:
@@ -472,6 +507,11 @@ spec:
             {{- end }}
 
             {{- if eq $.Necessary.exposeType "Ingress" }}
+            ENTRYPOINT=$(resolve_traefik_entrypoint "{{ $.Necessary.traefikName }}" "{{ $value }}" "{{ $.Necessary.handleType }}") || {
+              execute_rollback
+              exit 1
+            }
+
             cat > /tmp/sentinel-traefik-ingress-{{ $.Globe.MiddlewareName }}-{{ $index }}.yaml << EOF
             apiVersion: traefik.containo.us/v1alpha1
             kind: IngressRouteTCP
@@ -489,7 +529,7 @@ spec:
                 middleware.cn/sourcename: "redis-sentinel-expose-external"
             spec:
               entryPoints:
-              - {{ $.Necessary.traefikName }}-p{{ $value }}
+              - ${ENTRYPOINT}
               routes:
               - match: HostSNI (\`*\`)
                 services:
