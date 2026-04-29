@@ -182,12 +182,16 @@ spec:
         {{- $_ := set $image "redisImageTag_6_2_16" "6.2.16-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_6_2_18" "6.2.18-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_6_2_19" "6.2.19-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_6_2_20" "6.2.20-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_7_0_12" "7.0.12-1.2.0" -}}
+        {{- $_ := set $image "redisImageTag_7_0_15" "7.0.15-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_7_2_4" "7.2.4-1.2.0" -}}
         {{- $_ := set $image "redisImageTag_7_2_8" "7.2.8-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_7_2_10" "7.2.10-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_7_2_11" "7.2.11-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_13" "7.2.13-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_7_4_5" "7.4.5-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_4_6" "7.4.6-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_8_0_3" "8.0.3-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_8_0_4" "8.0.4-1.0.0" -}}
         {{- $_ := set $image "redisImageTag_8_2_2" "v8.2.2-1.0.0-redis" -}}
