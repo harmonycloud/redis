@@ -247,7 +247,7 @@ spec:
                   value: Asia/Shanghai
                 - name: CRD_GROUP
                   value: harmonycloud
-                - name: aliyun_logs_middlewarestdoutsddsdsdsa
+                - name: aliyun_logs_middlewarestdout
                   value: stdout
                 - name: aliyun_logs_middlewarestdout_tags
                   value: middleware_name=redis-redis-operator
