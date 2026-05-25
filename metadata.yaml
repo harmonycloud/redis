@@ -1,11 +1,9 @@
 name: Redis # 中间件类型
-version: 2.19.4-1.0.0 # 版本号
+version: 2.20.1-1.0.0 # 版本号
 app:
   version: # 中间件支持版本
-    - "8.2.3"
-    - "8.0.4"
-    - "7.4.6"
-    - "7.2.13"
+    - "8.2.6"
+    - "7.2.14"
     - "7.2.4"
 owner: HarmonyCloud # 供应商
 type: db # 类型
@@ -49,3 +47,9 @@ changes: |
     2026.04.20: 适配2.19.3，支持7.2.13版本，下线7.2.11版本
   2.19.4-1.0.0：
     2026.05.06: 适配2.19.4，修复集群/集群代理模式克隆服务异常 #280435
+  2.20.1-1.0.0：
+    2026.05.25: 升级到 redis chart 2.20.1
+    2026.05.25: 支持 Redis 8.2.6 / 7.2.14，丢弃 7.2.13 / 7.4.6 / 8.0.4 / 8.2.3 新建（保留 7.2/8.2 内升级路径）
+    2026.05.25: Redis Operator 镜像升级至 v2.20.1（#291774 operator 多 namespace 监听能力按上游默认值即不传 --namespace，全集群监听）
+    2026.05.25: 集群支持 suspended 字段（#298024），stop action 改为 patch parameters.suspended=true
+    2026.05.25: cluster / sentinel / sentinel-active 三个 baseline 的 middlewareImage $image 字典新增 7.2.14 / 8.2.6 / 8.6.3 三个镜像 tag（新版本不显式列入 $versionMap，走 fallback 拼装 redis-cli-port:<tag>，与上游 chart 一致）

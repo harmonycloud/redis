@@ -9,14 +9,6 @@ spec:
   actionType: "stop"
   necessary: {}
   steps:
-    - name: getBaselineName
-      output:
-        type: "string"
-        expose: true
-      cmd:
-        command:
-          - |
-            kubectl get mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} -o jsonpath='{.metadata.labels.middleware\.cn/definition}'
     - name: stop
       output:
         type: "string"
@@ -24,12 +16,6 @@ spec:
       cmd:
         command:
           - |
-            {{- if eq .Step.getBaselineName.output "redis-cluster" -}}
-            kubectl patch mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} --type=merge -p '{"spec":{"necessary":{"resource":{"redis":{"replicas":0}}}}}'
-            {{- else if eq .Step.getBaselineName.output "redis-sentinel" -}}
-            kubectl patch mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} --type=merge -p '{"spec":{"necessary":{"resource":{"redis":{"replicas":0},"sentinel":{"replicas":0}}}}}'
-            {{- else if eq .Step.getBaselineName.output "redis-sentinel-active" -}}
-            kubectl patch mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} --type=merge -p '{"spec":{"necessary":{"resource":{"redis":{"replicas":0},"sentinel":{"replicas":0}}}}}'
-            {{- else -}}
-            kubectl patch mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} --type=merge -p '{"spec":{"necessary":{"resource":{"redis":{"replicas":0}}}}}'
-            {{- end -}}
+            # Suspend the cluster: Redis operator 2.20+ scales all pods to 0 while preserving PVC data
+            # 通过将 mid 的 spec.parameters.suspended 置为 true，让 Redis Operator 把集群缩容到 0（保留 PVC 数据）
+            kubectl patch mid {{ .Globe.MiddlewareName }} -n {{ .Globe.Namespace }} --type=merge -p '{"spec":{"parameters":{"suspended":true}}}'

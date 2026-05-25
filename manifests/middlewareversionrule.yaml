@@ -2,6 +2,7 @@ mainVersionGroups:
   "6.x":
     - "6.2.20"
   "7.2":
+    - "7.2.14"
     - "7.2.13"
     - "7.2.4"
   "7.0":
@@ -12,6 +13,7 @@ mainVersionGroups:
   "8.0":
     - "8.0.4"
   "8.2":
+    - "8.2.6"
     - "8.2.3"
 
 crossUpgradeRules:
