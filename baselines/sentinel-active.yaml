@@ -159,8 +159,31 @@ spec:
         rollingUpdate:
           maxUnavailable: 1
         type: RollingUpdate
+      topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app: "{{ .Globe.Name }}"
+              component: "{{ .Globe.Name }}-sentinel"
+          maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+        - labelSelector:
+            matchLabels:
+              app: "{{ .Globe.Name }}"
+              component: "{{ .Globe.Name }}-sentinel"
+          maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
     pod:
       - affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: topology.kubernetes.io/zone
+                      operator: NotIn
+                      values:
+                        - zoneC
         annotations:
           fixed-node-middleware-pod: "true"
           fixed.ipam.harmonycloud.cn: "true"
@@ -233,6 +256,40 @@ spec:
             memory: '"{{ .Necessary.resource.redis.requests.memory }}"'
         updateStrategy: {}
         command: /bin/launch.sh
+        tolerations:
+        - effect: NoSchedule
+          key: harm.cn/type
+          operator: Equal
+          value: active-active
+        topologySpreadConstraints:
+          - labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - "{{ .Globe.Name }}"
+                - key: component
+                  operator: NotIn
+                  values:
+                    - "{{ .Globe.Name }}-sentinel"
+                    - "{{ .Globe.Name }}-predixy"
+            maxSkew: 1
+            topologyKey: topology.kubernetes.io/zone
+            whenUnsatisfiable: DoNotSchedule
+          - labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - "{{ .Globe.Name }}"
+                - key: component
+                  operator: NotIn
+                  values:
+                    - "{{ .Globe.Name }}-sentinel"
+                    - "{{ .Globe.Name }}-predixy"
+            maxSkew: 1
+            topologyKey: kubernetes.io/hostname
+            whenUnsatisfiable: DoNotSchedule
     exporter:
       port: 9121
       sentinelPort: 9121

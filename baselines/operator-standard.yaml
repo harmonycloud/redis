@@ -232,6 +232,7 @@ spec:
             app.kubernetes.io/name: redis-operator
             app.kubernetes.io/instance: "{{ .Globe.Name }}"
         spec:
+          serviceAccount: "{{ .Globe.Name }}-redis-operator"
           containers:
             - name: "{{ .Globe.Name }}"
               image: '{{ if ne .Globe.repository "" }}{{ .Globe.repository }}/{{ end }}{{ .Globe.project }}/redis-operator:v2.19.1'
@@ -296,7 +297,6 @@ spec:
                       operator: In
                       values:
                         - redis
-          serviceAccount: "{{ .Globe.Name }}-redis-operator"
   configurations:
     - name: crd-redisclusters
       values: { }
