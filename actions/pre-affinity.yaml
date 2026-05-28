@@ -21,8 +21,8 @@ spec:
             parameters: {
               pod: [
                 {
-                  {{- if eq (semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version) false }}
                   affinity: {
+                    {{- if eq (semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version) false }}
                     {{- if eq .Necessary.podAntiAffinity "hard"}}
                     podAntiAffinity: {
                       requiredDuringSchedulingIgnoredDuringExecution: [
@@ -61,13 +61,13 @@ spec:
                       ]
                     }
                     {{- end}}
+                    {{- end }}
                     {{- if .Necessary.nodeAffinity }}
                     {{- with .Necessary.nodeAffinity }}
                     nodeAffinity: {{ toCue . }}
                     {{- end }}
                     {{- end }}
                   }
-                  {{- end }}
                   {{- if eq (semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version) true }}
                   topologySpreadConstraints: [
                   {{- if ne .Necessary.podAntiAffinityTopologKey "kubernetes.io/hostname"}}
