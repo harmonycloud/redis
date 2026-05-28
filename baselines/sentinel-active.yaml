@@ -90,14 +90,30 @@ spec:
       exposed: true
     - name: pre-redis-tolerations
       parameters:
-        tolerations: []
+        tolerations:
+          - effect: NoSchedule
+            key: harm.cn/type
+            operator: Equal
+            value: active-active
+          - effect: NoSchedule
+            key: skyview/nodepool-taint
+            operator: Equal
+            value: system
       fixed: false
       exposed: true
     - name: pre-redis-affinity
       parameters:
-        podAntiAffinityTopologKey: "kubernetes.io/hostname"
-        podAntiAffinity: "soft"
-        nodeAffinity: {}
+        podAntiAffinityTopologKey: "topology.kubernetes.io/zone"
+        podAntiAffinity: "hard"
+        disableHostnameTopologySpread: true
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: NotIn
+                    values:
+                      - zoneC
       fixed: false
       exposed: true
     # - name: pre-redis-sentinel-affinity
@@ -167,24 +183,8 @@ spec:
           maxSkew: 1
           topologyKey: topology.kubernetes.io/zone
           whenUnsatisfiable: DoNotSchedule
-        - labelSelector:
-            matchLabels:
-              app: "{{ .Globe.Name }}"
-              component: "{{ .Globe.Name }}-sentinel"
-          maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: DoNotSchedule
     pod:
-      - affinity:
-          nodeAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              nodeSelectorTerms:
-                - matchExpressions:
-                    - key: topology.kubernetes.io/zone
-                      operator: NotIn
-                      values:
-                        - zoneC
-        annotations:
+      - annotations:
           fixed-node-middleware-pod: "true"
           fixed.ipam.harmonycloud.cn: "true"
         configmap: "{{ .Globe.Name }}-config"
@@ -256,40 +256,6 @@ spec:
             memory: '"{{ .Necessary.resource.redis.requests.memory }}"'
         updateStrategy: {}
         command: /bin/launch.sh
-        tolerations:
-        - effect: NoSchedule
-          key: harm.cn/type
-          operator: Equal
-          value: active-active
-        topologySpreadConstraints:
-          - labelSelector:
-              matchExpressions:
-                - key: app
-                  operator: In
-                  values:
-                    - "{{ .Globe.Name }}"
-                - key: component
-                  operator: NotIn
-                  values:
-                    - "{{ .Globe.Name }}-sentinel"
-                    - "{{ .Globe.Name }}-predixy"
-            maxSkew: 1
-            topologyKey: topology.kubernetes.io/zone
-            whenUnsatisfiable: DoNotSchedule
-          - labelSelector:
-              matchExpressions:
-                - key: app
-                  operator: In
-                  values:
-                    - "{{ .Globe.Name }}"
-                - key: component
-                  operator: NotIn
-                  values:
-                    - "{{ .Globe.Name }}-sentinel"
-                    - "{{ .Globe.Name }}-predixy"
-            maxSkew: 1
-            topologyKey: kubernetes.io/hostname
-            whenUnsatisfiable: DoNotSchedule
     exporter:
       port: 9121
       sentinelPort: 9121
