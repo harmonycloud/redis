@@ -232,6 +232,7 @@ spec:
             app.kubernetes.io/name: redis-operator
             app.kubernetes.io/instance: "{{ .Globe.Name }}"
         spec:
+          serviceAccount: "{{ .Globe.Name }}-redis-operator"
           containers:
             - name: "{{ .Globe.Name }}"
               image: '{{ if ne .Globe.repository "" }}{{ .Globe.repository }}/{{ end }}{{ .Globe.project }}/redis-operator:v2.20.1'

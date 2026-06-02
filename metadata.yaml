@@ -1,5 +1,5 @@
 name: Redis # 中间件类型
-version: 2.20.1-1.0.0 # 版本号
+version: 2.20.1-1.0.1 # 版本号
 app:
   version: # 中间件支持版本
     - "8.2.6"
@@ -55,3 +55,6 @@ changes: |
     2026.05.25: Redis Operator 镜像升级至 v2.20.1（#291774 operator 多 namespace 监听能力按上游默认值即不传 --namespace，全集群监听）
     2026.05.25: 集群支持 suspended 字段（#298024），stop action 改为 patch parameters.suspended=true
     2026.05.25: cluster / sentinel / sentinel-active 三个 baseline 的 middlewareImage $image 字典新增 7.2.14 / 8.2.6 / 8.6.3 三个镜像 tag（新版本不显式列入 $versionMap，走 fallback 拼装 redis-cli-port:<tag>，与上游 chart 一致）
+  2.20.1-1.0.1:
+    2026.05.28: 支持齐商双活可用区调度配置
+    2026.05.28: 修复服务暴露Traefik entryPoint获取逻辑
