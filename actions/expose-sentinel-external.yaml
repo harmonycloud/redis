@@ -618,6 +618,8 @@ spec:
             {{- end }}
             {{- end }}
 
-            PATCH=$(jq -cn --argjson externalAccess "$EXTERNAL_ACCESS" '[{"op": "add", "path": "/spec/parameters/pod/0/externalAccess", "value": $externalAccess}]')
-            kubectl patch mid "${MIDDLEWARE_NAME}" -n "${NAMESPACE}" --type=json -p "${PATCH}"
+            CURRENT_PARAMETERS=$(kubectl get mid "${MIDDLEWARE_NAME}" -n "${NAMESPACE}" -o json | jq -c '.spec.parameters // {}')
+            UPDATED_PARAMETERS=$(jq -cn --argjson parameters "$CURRENT_PARAMETERS" --argjson externalAccess "$EXTERNAL_ACCESS" '$parameters | .pod = ((if (.pod | type) == "array" and (.pod | length) > 0 then .pod else [{}] end) | .[0].externalAccess = $externalAccess)')
+            PATCH=$(jq -cn --argjson parameters "$UPDATED_PARAMETERS" '{spec: {parameters: $parameters}}')
+            kubectl patch mid "${MIDDLEWARE_NAME}" -n "${NAMESPACE}" --type=merge -p "${PATCH}"
             echo "Updated externalAccess for Middleware ${MIDDLEWARE_NAME}"
