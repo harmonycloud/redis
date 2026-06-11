@@ -1,5 +1,5 @@
 name: Redis # 中间件类型
-version: 2.20.1-1.0.1 # 版本号
+version: 2.20.2-1.0.0 # 版本号
 app:
   version: # 中间件支持版本
     - "8.2.6"
@@ -58,3 +58,6 @@ changes: |
   2.20.1-1.0.1:
     2026.05.28: 支持齐商双活可用区调度配置
     2026.05.28: 修复服务暴露Traefik entryPoint获取逻辑
+  2.20.2-1.0.0:
+    2026.06.09: sentinel 添加 ignore-warnings ARM64-COW-BUG 配置
+    2026.06.09: 修改redis服务暴露查询traefik ds的方式
