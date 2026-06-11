@@ -554,45 +554,29 @@ spec:
             cleanup_rollback
             echo "Operation completed successfully!"
     - name: updateCluster
-      type: "KubectlEdit" # KubectlGet、KubectlEdit、KubectlExec、Exec、HTTP
-      cue: |
-        output: {
-          spec: parameters.spec
-        }
-        parameters: {
-          spec: {
-            parameters: {
-              pod: [
-                {
-                  externalAccess: {
-                    {{- if eq .Necessary.handleType "create" }}
-                    enabled: true
-                    {{- else if eq .Necessary.handleType "delete" }}
-                    enabled: false
-                    {{- end }}
-                    addresses: {
-                      {{- if eq .Necessary.handleType "create" }}
-                      {{- range $index, $value := .Necessary.ports }}
-                      "{{ $.Globe.MiddlewareName }}-{{ $index }}": "{{ $.Necessary.host }}:{{ $value }}"
-                      {{- end }}
-                      {{- end }}
-                    }
-                    busPorts: {
-                      {{- if eq .Necessary.handleType "create" }}
-                      {{- range $index, $value := .Necessary.busPorts }}
-                      "{{ $.Globe.MiddlewareName }}-{{ $index }}": {{ $value }}
-                      {{- end }}
-                      {{- end }}
-                    }
-                  }
-                },
-              ]
-            }
-          }
-          resource: {
-            apiversion: "middleware.cn/v1"
-            kind: "Middleware"
-            name: "{{ .Globe.MiddlewareName }}"
-            namespace: "{{ .Globe.Namespace }}"
-          }
-        }
+      output:
+        type: "string"
+        expose: false
+      cmd:
+        command:
+          - |
+            set -e
+
+            NAMESPACE="{{ .Globe.Namespace }}"
+            MIDDLEWARE_NAME="{{ .Globe.MiddlewareName }}"
+
+            {{- if eq .Necessary.handleType "create" }}
+            EXTERNAL_ACCESS=$(jq -cn '{enabled: true, addresses: {}, busPorts: {}}')
+            {{- range $index, $value := .Necessary.ports }}
+            EXTERNAL_ACCESS=$(echo "$EXTERNAL_ACCESS" | jq -c --arg key "{{ $.Globe.MiddlewareName }}-{{ $index }}" --arg value "{{ $.Necessary.host }}:{{ $value }}" '.addresses[$key] = $value')
+            {{- end }}
+            {{- range $index, $value := .Necessary.busPorts }}
+            EXTERNAL_ACCESS=$(echo "$EXTERNAL_ACCESS" | jq -c --arg key "{{ $.Globe.MiddlewareName }}-{{ $index }}" --argjson value {{ $value }} '.busPorts[$key] = $value')
+            {{- end }}
+            {{- else if eq .Necessary.handleType "delete" }}
+            EXTERNAL_ACCESS=$(jq -cn '{enabled: false, addresses: {}, busPorts: {}}')
+            {{- end }}
+
+            PATCH=$(jq -cn --argjson externalAccess "$EXTERNAL_ACCESS" '[{"op": "add", "path": "/spec/parameters/pod/0/externalAccess", "value": $externalAccess}]')
+            kubectl patch mid "${MIDDLEWARE_NAME}" -n "${NAMESPACE}" --type=json -p "${PATCH}"
+            echo "Updated externalAccess for Middleware ${MIDDLEWARE_NAME}"
