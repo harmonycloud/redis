@@ -1,0 +1,133 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareActionBaseline
+metadata:
+  name: pgsql-failover
+  annotations:
+    alias: "MasterSlaveSwitchover"
+spec:
+  baselineType: "OpsAction"
+  actionType: "failover"
+  supportedBaselines:
+    - "postgresql-master-slave"
+    - "postgresql-master-slave-active"
+  necessary: {}
+  steps:
+    - name: getSyncSlaveName
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - "kubectl"
+          - "get"
+          - "pg"
+          - "-n"
+          - "{{ .Globe.Namespace }}"
+          - "{{ .Globe.MiddlewareName }}"
+          - "-o"
+          - 'jsonpath=''{.status.conditions[?(@.type=="sync_slave")].name}'''
+    - name: getSyncSlaveStatus
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - "kubectl"
+          - "get"
+          - "pg"
+          - "-n"
+          - "{{ .Globe.Namespace }}"
+          - "{{ .Globe.MiddlewareName }}"
+          - "-o"
+          - 'jsonpath=''{.status.conditions[?(@.type=="sync_slave")].status}'''
+    - name: getMasterName
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - "kubectl"
+          - "get"
+          - "pg"
+          - "-n"
+          - "{{ .Globe.Namespace }}"
+          - "{{ .Globe.MiddlewareName }}"
+          - "-o"
+          - 'jsonpath=''{.status.conditions[?(@.type=="master")].name}'''
+    - name: getMasterStatus
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - "kubectl"
+          - "get"
+          - "pg"
+          - "-n"
+          - "{{ .Globe.Namespace }}"
+          - "{{ .Globe.MiddlewareName }}"
+          - "-o"
+          - 'jsonpath=''{.status.conditions[?(@.type=="master")].status}'''
+    - name: getSlaveName
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - "kubectl"
+          - "get"
+          - "pg"
+          - "-n"
+          - "{{ .Globe.Namespace }}"
+          - "{{ .Globe.MiddlewareName }}"
+          - "-o"
+          - 'jsonpath=''{.status.conditions[?(@.type=="slave")].name}'''
+    - name: getSlaveStatus
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - "kubectl"
+          - "get"
+          - "pg"
+          - "-n"
+          - "{{ .Globe.Namespace }}"
+          - "{{ .Globe.MiddlewareName }}"
+          - "-o"
+          - 'jsonpath=''{.status.conditions[?(@.type=="slave")].status}'''
+    - name: getPatroniService
+      output:
+        type: "string"
+        expose: true
+      cmd:
+        command:
+          - "kubectl"
+          - "get"
+          - "svc"
+          - "-n"
+          - "{{ .Globe.Namespace }}"
+          - "{{ .Globe.MiddlewareName }}-patroni"
+          - "-o"
+          - 'jsonpath=''{.spec.ports[?(@.name=="patroni")].port}'''
+    - name: do
+      cmd:
+        command:
+          - |
+            {{- if and (eq .Step.getMasterStatus.output "True") (eq .Step.getSyncSlaveStatus.output "True") }}
+            kubectl exec {{ .Step.getSyncSlaveName.output }} -n {{ .Globe.Namespace }} -c postgres --insecure-skip-tls-verify=true -- bash -c "curl -s -X POST http://{{ .Globe.MiddlewareName }}-patroni:{{ .Step.getPatroniService.output }}/switchover -d '{\"leader\": \"{{ .Step.getMasterName.output }}\",\"candidate\": \"{{ .Step.getSyncSlaveName.output }}\"}'"
+            {{- else if eq .Step.getSyncSlaveStatus.output "True"}}
+            kubectl exec {{ .Step.getSyncSlaveName.output }} -n {{ .Globe.Namespace }} -c postgres --insecure-skip-tls-verify=true -- bash -c "curl -s -X POST http://{{ .Globe.MiddlewareName }}-patroni:{{ .Step.getPatroniService.output }}/failover -d '{\"candidate\": \"{{ .Step.getSyncSlaveName.output }}\"}'"
+            {{- else }}
+            {{- $slaveNames := splitList " " .Step.getSlaveName.output }}
+            {{- $slaveStatuses := splitList " " .Step.getSlaveStatus.output }}
+            {{- $availableSlave := "" }}
+            {{- range $index, $status := $slaveStatuses }}
+              {{- if eq $status "True" }}
+                {{- $availableSlave = index $slaveNames $index }}
+              {{- end }}
+            {{- end }}
+            {{- if ne $availableSlave "" }}
+            kubectl exec {{ $availableSlave }} -n {{ .Globe.Namespace }} -c postgres --insecure-skip-tls-verify=true -- bash -c "curl -s -X POST http://{{ .Globe.MiddlewareName }}-patroni:{{ .Step.getPatroniService.output }}/failover -d '{\"candidate\": \"{{ $availableSlave }}\"}'"
+            {{- end }}
+            {{- end }}

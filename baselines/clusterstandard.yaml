@@ -1,0 +1,272 @@
+apiVersion: middleware.cn/v1
+kind: MiddlewareBaseline
+metadata:
+  name: redis-cluster-standard
+  labels:
+    nephele/user: admin
+    app.kubernetes.io/instance: "{{ .Globe.Name }}"
+  annotations:
+    datapath: '{{ printf "/data/redis/cluster.local/%s/%s/{POD_NAME}/data" .Globe.Namespace .Globe.Name }}'
+    baselineName: "redis-cluster-standard"
+    description: "redis-cluster-standard Baseline, incorporating core functionality and essential dependencies, is tailored for rapid deployment and fundamental application scenarios. It delivers stable and reliable performance, and is designed for ease of extension and maintenance."
+    mode: "HA"
+spec:
+  operatorBaseline:
+    name: redis-operator-standard
+    gvkName: v1alpha1
+  necessary:
+    repository: ""
+    version: '{"type":"version","label":"Version","required":true,"default":"8.2.6"}'
+#    password: |
+#      {
+#        "type": "password",
+#        "label": "AdminPassword",
+#        "required": true,
+#        "description": "Please enter a password consisting of English letters, numbers, or the special characters \"/ ~ % _ . ^ + = - [ ] :\", with a length between 1 and 32 characters.",
+#        "placeholder": "Enter your admin password",
+#        "pattern": "^[A-Za-z0-9~_./%^+=:\\-\\[\\]]{1,32}$"
+#       }
+    password: |
+      {
+        "type": "password",
+        "label": "Administrator password",
+        "required": true,
+        "patterns": [
+          {
+            "pattern": "^.{1,32}$",
+            "description": "Password length must be between 1 and 32 characters"
+          },
+          {
+            "pattern": "^[A-Za-z0-9~_./%^+=:\\-\\[\\]]+$",
+            "description": "Please enter a password consisting of English letters, numbers, or the special characters \"/ ~ % _ . ^ + = - [ ] : \""
+          }
+        ],
+        "pattern": "^[A-Za-z0-9~_./%^+=:\\-\\[\\]]*$",
+        "description": "Please enter a password consisting of English letters, numbers, or the special characters \"/ ~ % _ . ^ + = - [ ] : \"",
+        "placeholder": "Enter your admin password"
+      }
+    resource:
+      redis:
+        limits:
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core`","placeholder":"Please enter a custom quota, the unit is `Core`","default":"2","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
+          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
+        requests:
+          cpu: '{"type":"string","label":"CPU","required":true,"description":"Please enter a custom quota, the unit is `Core`","placeholder":"Please enter a custom quota, the unit is `Core`","default":"2","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
+          memory: '{"type":"string","label":"Memory","required":true,"description":"Please enter a custom quota, the unit is `Gi`","placeholder":"Please enter a custom quota, the unit is `Gi`","default":"4","pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","min":0.1}'
+        replicas: '{"type":"int","label":"Shards","required":true,"description":"Please enter an odd number of shards greater than or equal to 3 (e.g., 3, 5, or 7).","default":6,"pattern":"^(6|([1-9]\\d*[02468]|[2468])[26]|([1-9]\\d*[13579]|[13579])[048])$","placeholder":"Please enter an odd number of shards greater than or equal to 3 (e.g., 3, 5, or 7)."}'
+        volume:
+          size: '{"type":"int","label":"StorageSize","required":true,"pattern":"^(?!0$)(?!0\\d)\\d+(\\.\\d)?$","placeholder":"Please enter the storage size"}'
+          storageClass: '{"type":"storageClass","label":"StorageClass","required":true,"description":"Please select storage","placeholder":"Please select storage"}'
+  preActions:
+    - name: pre-redis-alertrule-labels
+      parameters:
+        labels: {}
+      exposed: false
+    - name: pre-redis-logging
+      parameters:
+        fileLogging: true
+        stdoutLogging: true
+      fixed: false
+      exposed: true
+    - name: pre-redis-tolerations
+      parameters:
+        tolerations: [ ]
+      fixed: false
+      exposed: true
+    - name: pre-redis-affinity
+      parameters:
+        podAntiAffinityTopologKey: "kubernetes.io/hostname"
+        podAntiAffinity: "soft"
+        nodeAffinity: { }
+      fixed: false
+      exposed: true
+  parameters:
+    suspended: false
+    env:
+      TZ: Asia/Shanghai
+    type: cluster
+    pod:
+      - affinity:
+        annotations:
+          fixed-node-middleware-pod: "true"
+          fixed.ipam.harmonycloud.cn: "true"
+        configmap: "{{ .Globe.Name }}-config"
+        env:
+          - name: SYS_CODE
+            value: "{{ .Globe.Name }}"
+        labels:
+          harmonycloud.cn/statefulset: "{{ .Globe.Name }}"
+          middleware: redis
+          nephele/user: admin
+        middlewareImage: '"{{- $version := .Necessary.version -}}
+        {{- $image := dict -}}
+        {{- $_ := set $image "redisImageTag" "5.0.8-1.1.1" -}}
+        {{- $_ := set $image "redisImageTag_6" "6.2.6-1.2.0" -}}
+        {{- $_ := set $image "redisImageTag_6_11" "6.2.11-1.2.0" -}}
+        {{- $_ := set $image "redisImageTag_6_2_14" "6.2.14-1.2.0" -}}
+        {{- $_ := set $image "redisImageTag_6_2_16" "6.2.16-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_6_2_18" "6.2.18-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_6_2_19" "6.2.19-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_6_2_20" "6.2.20-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_0_12" "7.0.12-1.2.0" -}}
+        {{- $_ := set $image "redisImageTag_7_0_15" "7.0.15-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_4" "7.2.4-1.2.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_8" "7.2.8-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_10" "7.2.10-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_11" "7.2.11-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_13" "7.2.13-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_4_5" "7.4.5-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_4_6" "7.4.6-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_8_0_3" "8.0.3-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_8_0_4" "8.0.4-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_7_2_14" "7.2.14-1.0.0" -}}
+        {{- $_ := set $image "redisImageTag_8_2_2" "v8.2.2-1.0.0-redis" -}}
+        {{- $_ := set $image "redisImageTag_8_2_3" "v8.2.3-1.0.0-redis" -}}
+        {{- $_ := set $image "redisImageTag_8_2_6" "v8.2.6-1.0.0-redis" -}}
+        {{- $_ := set $image "redisImageTag_8_6_3" "v8.6.3-1.0.0-redis" -}}
+        {{- $versionMap := dict -}}
+        {{- $_ := set $versionMap "5.0.8" (printf "redis-cli-v5-port:%s" (index $image "redisImageTag")) -}}
+        {{- $_ := set $versionMap "6.2.6" (printf "redis-cli-v6-port:%s" (index $image "redisImageTag_6")) -}}
+        {{- $_ := set $versionMap "6.2.11" (printf "redis-cli-v6-port:%s" (index $image "redisImageTag_6_11")) -}}
+        {{- $_ := set $versionMap "6.2.14" (printf "redis-cli-v6-port:%s" (index $image "redisImageTag_6_2_14")) -}}
+        {{- $_ := set $versionMap "6.2.16" (printf "redis-cli-v6-port:%s" (index $image "redisImageTag_6_2_16")) -}}
+        {{- $_ := set $versionMap "6.2.18" (printf "redis-cli-v6-port:%s" (index $image "redisImageTag_6_2_18")) -}}
+        {{- $_ := set $versionMap "6.2.19" (printf "redis-cli-port:%s" (index $image "redisImageTag_6_2_19")) -}}
+        {{- $_ := set $versionMap "7.0.12" (printf "redis-cli-v7-port:%s" (index $image "redisImageTag_7_0_12")) -}}
+        {{- $_ := set $versionMap "7.2.4" (printf "redis-cli-v7-port:%s" (index $image "redisImageTag_7_2_4")) -}}
+        {{- $_ := set $versionMap "7.2.8" (printf "redis-cli-v7-port:%s" (index $image "redisImageTag_7_2_8")) -}}
+        {{- $_ := set $versionMap "7.2.10" (printf "redis-cli-port:%s" (index $image "redisImageTag_7_2_10")) -}}
+        {{- $_ := set $versionMap "7.4.5" (printf "redis-cli-port:%s" (index $image "redisImageTag_7_4_5")) -}}
+        {{- $_ := set $versionMap "8.0.3" (printf "redis-cli-port:%s" (index $image "redisImageTag_8_0_3")) -}}
+        {{- $middlewareImage := index $versionMap $version | default "" -}}
+        {{- if not $middlewareImage -}}
+          {{- $versionUnderscore := replace "." "_" $version -}}
+          {{- $imageTagKey := printf "redisImageTag_%s" $versionUnderscore -}}
+          {{- with index $image $imageTagKey -}}
+            {{- $middlewareImage = printf "redis-cli-port:%s" . -}}
+          {{- end -}}
+        {{- end -}}
+        {{- $middlewareImage -}}"'
+        initImage: "redis-init:v1.7.4"
+        monitorImage: "redis-exporter:v1.0.5-1.3.0"
+        logrotateImage: "logrotate:3.21.0-1.0.0"
+        requirepass: '"{{ .Necessary.password }}"'
+        imagePullPolicy: IfNotPresent
+        hostNetwork: false
+        resources:
+          limits:
+            cpu: '"{{ .Necessary.resource.redis.limits.cpu }}"'
+            memory: '"{{ .Necessary.resource.redis.limits.memory }}"'
+          requests:
+            cpu: '"{{ .Necessary.resource.redis.requests.cpu }}"'
+            memory: '"{{ .Necessary.resource.redis.requests.memory }}"'
+        updateStrategy: { }
+        command: /bin/launch.sh
+    exporter:
+      port: 9121
+      sentinelPort: 9121
+      hotKeyScan:
+        enable: false
+        interval: 86400
+        hotkeyThreshold: 18
+        hotKeylen: 100
+      rdbScan:
+        enable: false
+        interval: 86400
+        bigKeyThreshold: 1048576
+        bigKeyLen: 100
+        filePath: "/data/redis/cluster.local/{{ .Globe.Namespace }}/{{ .Globe.Name }}/{POD_NAME}/data"
+      envs:
+      - name: "REDIS_EXPORTER_SLOWLOG_ENABLED"
+        value: "true"
+      - name: "REDIS_EXPORTER_SLOWLOG_LIMIT"
+        value: "100"
+    podManagementPolicy: Parallel
+    replicas: "{{ .Necessary.resource.redis.replicas }}"
+    servicePort: 6379
+    repository: "{{ .Necessary.repository }}/"
+    updateStrategy:
+      type: AutoReceive
+    version: "{{ .Necessary.version }}"
+    volumeClaimTemplates:
+      - metadata:
+          name: redis-data
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: "{{ .Necessary.resource.redis.volume.storageClass }}"
+          resources:
+            requests:
+              storage: '"{{ .Necessary.resource.redis.volume.size }}"'
+  configurations:
+    - name: redis-credential
+      values:
+        redis:
+          port: "{{ .Parameters.servicePort }}"
+        redisPassword: '"{{ (index .Parameters.pod 0).requirepass }}"'
+    - name: redis-predixy-servicemonitor
+      values:
+        predixy:
+          enableProxy: '"{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}"'
+    - name: redis-alertrule
+      values:
+        type: "{{ .Parameters.type }}"
+        predixy:
+          enableProxy: '"{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}"'
+        alertRules:
+          MismatchedRequestResponseRate: { }
+          RedisExporterDown: { }
+          RedisFailOver: { }
+          RedisUnhealthy: { }
+          RedisLargConnect: { }
+          RedisLargeBlockConnect: { }
+          RedisReplicationBroken: { }
+          RedisOutOfConfiguredMaxmemory: { }
+          RedisVolumeUsageMinor: { }
+          RedisVolumeUsageMajor: { }
+          RedsMemoryUsageHigh: { }
+          RedisCpuUsageHigh: { }
+          RedisSentinelWatchNodeUnhealthy: { }
+          RedisSentries_num: { }
+    - name: redis-config
+      values:
+        redis:
+          resources:
+            limits:
+              cpu: '"{{ .Necessary.resource.redis.limits.cpu }}"'
+              memory: '"{{ .Necessary.resource.redis.limits.memory }}"'
+            requests:
+              cpu: '"{{ .Necessary.resource.redis.requests.cpu }}"'
+              memory: '"{{ .Necessary.resource.redis.requests.memory }}"'
+        type: "{{ .Parameters.type }}"
+        version: "{{ .Parameters.version }}"
+        customVolumes: { }
+        additionArgs: { }
+        args:
+          maxmemory-policy: volatile-lru
+          renameCommand:
+            # - CONFIG ""
+            # - SHUTDOWN ""
+            - KEYS NOKEYS
+            - FLUSHDB ""
+            - FLUSHALL ""
+        exporter:
+          hotKeyScan:
+            enable: false
+            interval: 86400
+            hotkeyThreshold: 18
+            hotKeylen: 100
+    - name: redis-sc
+      values:
+        type: "{{ .Parameters.type }}"
+        predixy:
+          enableProxy: '"{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}"'
+    - name: redis-servicemonitor
+    - name: redis-shard-sc
+      values:
+        type: "{{ .Parameters.type }}"
+        predixy:
+          enableProxy: '"{{ if hasKey .Parameters "predixy" }}true{{ else }}flase{{ end }}"'
+        redis:
+          replicas: "{{ .Necessary.resource.redis.replicas }}"
+    - name: redis-metrice-svc
+      values: { }
