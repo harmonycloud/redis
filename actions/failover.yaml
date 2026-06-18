@@ -3,7 +3,7 @@ kind: MiddlewareActionBaseline
 metadata:
   name: pgsql-failover
   annotations:
-    alias: "MasterSlaveSwitchover"
+    alias: "主从切换"
 spec:
   baselineType: "OpsAction"
   actionType: "failover"
