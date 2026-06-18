@@ -1,15 +1,15 @@
 apiVersion: middleware.cn/v1
 kind: MiddlewareActionBaseline
 metadata:
-  name: pgsql-failover
+  name: redis-failover
   annotations:
     alias: "主从切换"
 spec:
   baselineType: "OpsAction"
   actionType: "failover"
   supportedBaselines:
-    - "postgresql-master-slave"
-    - "postgresql-master-slave-active"
+    - "redis-cluster"
+    - "redis-sentinel"
   necessary: {}
   steps:
     - name: getSyncSlaveName
