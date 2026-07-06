@@ -63,7 +63,8 @@ description:
     name-zh: "由英文字母、数字或特殊字符“/ ~ % _ . ^ + = - [ ] : ”组成的密码信息"
   - name: "Password length must be between 1 and 32 characters"
     name-zh: "长度需要1-32之间"
-
+  - name: "Number of nodes, please enter an even number greater than or equal to 2"
+    name-zh: "节点数量，请输入2或2以上的偶数"
 placeholder:
   - name: "Please enter a custom quota, the unit is `Gi`"
     name-zh: "请输入自定义配额,单位为Gi"
