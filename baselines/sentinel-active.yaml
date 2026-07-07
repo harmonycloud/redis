@@ -90,15 +90,7 @@ spec:
       exposed: true
     - name: pre-redis-tolerations
       parameters:
-        tolerations:
-          - effect: NoSchedule
-            key: harm.cn/type
-            operator: Equal
-            value: active-active
-          - effect: NoSchedule
-            key: skyview/nodepool-taint
-            operator: Equal
-            value: system
+        tolerations: []
       fixed: false
       exposed: true
     - name: pre-redis-affinity
